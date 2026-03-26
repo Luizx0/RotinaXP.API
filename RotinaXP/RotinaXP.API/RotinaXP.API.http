@@ -1,0 +1,6 @@
+@RotinaXP.API_HostAddress = http://localhost:5252
+
+GET {{RotinaXP.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
