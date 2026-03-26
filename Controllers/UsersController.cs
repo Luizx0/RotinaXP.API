@@ -1,26 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RotinaXP.API.Data;
 using RotinaXP.API.Models;
+using RotinaXP.API.Services;
 namespace RotinaXP.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly UserService _service;
 
-    public UsersController(ApplicationDbContext context)
+    public UsersController(UserService service)
     {
-        _context = context;
+        _service = service;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<User>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _context.Users
-            .Include(u => u.Tasks)
-            .ToListAsync();
+        var users = await _service.GetAllAsync();
 
         return Ok(users);
     }
@@ -30,9 +27,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
-        var user = await _context.Users
-            .Include(u => u.Tasks)
-            .FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _service.GetByIdAsync(id);
 
         if (user == null)
             return NotFound(new { message = "User not found" });
@@ -48,8 +43,7 @@ public class UsersController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Email))
             return BadRequest(new { message = "Name and Email are required" });
 
-        var existingUser = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == request.Email);
+        var existingUser = await _service.GetByEmailAsync(request.Email);
 
         if (existingUser != null)
             return BadRequest(new { message = "Email is already registered" });
@@ -62,8 +56,7 @@ public class UsersController : ControllerBase
             Points = request.Points
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        await _service.CreateAsync(user);
 
         return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
     }
@@ -73,7 +66,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
     {
-        var user = await _context.Users.FindAsync(id);
+        var user = await _service.GetByIdAsync(id);
         if (user == null)
             return NotFound(new { message = "User not found" });
 
@@ -86,8 +79,7 @@ public class UsersController : ControllerBase
         if (request.Points.HasValue)
             user.Points = request.Points.Value;
 
-        _context.Users.Update(user);
-        await _context.SaveChangesAsync();
+        await _service.UpdateAsync(user);
 
         return NoContent();
     }
@@ -97,12 +89,11 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id)
     {
-        var user = await _context.Users.FindAsync(id);
+        var user = await _service.GetByIdAsync(id);
         if (user == null)
             return NotFound(new { message = "User not found" });
 
-        _context.Users.Remove(user);
-        await _context.SaveChangesAsync();
+        await _service.DeleteAsync(user);
 
         return NoContent();
     }

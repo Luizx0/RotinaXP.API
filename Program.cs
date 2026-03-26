@@ -33,6 +33,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<TaskService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

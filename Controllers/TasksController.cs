@@ -1,26 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RotinaXP.API.Data;
 using RotinaXP.API.Models;
+using RotinaXP.API.Services;
 namespace RotinaXP.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly TaskService _service;
 
-    public TasksController(ApplicationDbContext context)
+    public TasksController(TaskService service)
     {
-        _context = context;
+        _service = service;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<TaskItem>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        var tasks = await _context.Tasks
-            .Include(t => t.User)
-            .ToListAsync();
+        var tasks = await _service.GetAllAsync();
 
         return Ok(tasks);
     }
@@ -30,9 +27,7 @@ public class TasksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
-        var task = await _context.Tasks
-            .Include(t => t.User)
-            .FirstOrDefaultAsync(t => t.Id == id);
+        var task = await _service.GetByIdAsync(id);
 
         if (task == null)
             return NotFound(new { message = "Task not found" });
@@ -45,14 +40,11 @@ public class TasksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByUser(int userId)
     {
-        var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+        var userExists = await _service.UserExistsAsync(userId);
         if (!userExists)
             return NotFound(new { message = "User not found" });
 
-        var tasks = await _context.Tasks
-            .Include(t => t.User)
-            .Where(t => t.UserId == userId)
-            .ToListAsync();
+        var tasks = await _service.GetByUserAsync(userId);
 
         return Ok(tasks);
     }
@@ -65,7 +57,7 @@ public class TasksController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Title))
             return BadRequest(new { message = "Title is required" });
 
-        var userExists = await _context.Users.AnyAsync(u => u.Id == request.UserId);
+        var userExists = await _service.UserExistsAsync(request.UserId);
         if (!userExists)
             return BadRequest(new { message = "UserId not found" });
 
@@ -76,8 +68,7 @@ public class TasksController : ControllerBase
             UserId = request.UserId
         };
 
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
+        await _service.CreateAsync(task);
 
         return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
     }
@@ -87,7 +78,7 @@ public class TasksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskRequest request)
     {
-        var task = await _context.Tasks.FindAsync(id);
+        var task = await _service.GetByIdAsync(id);
         if (task == null)
             return NotFound(new { message = "Task not found" });
 
@@ -97,8 +88,7 @@ public class TasksController : ControllerBase
         if (request.IsCompleted.HasValue)
             task.IsCompleted = request.IsCompleted.Value;
 
-        _context.Tasks.Update(task);
-        await _context.SaveChangesAsync();
+        await _service.UpdateAsync(task);
 
         return NoContent();
     }
@@ -108,12 +98,11 @@ public class TasksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id)
     {
-        var task = await _context.Tasks.FindAsync(id);
+        var task = await _service.GetByIdAsync(id);
         if (task == null)
             return NotFound(new { message = "Task not found" });
 
-        _context.Tasks.Remove(task);
-        await _context.SaveChangesAsync();
+        await _service.DeleteAsync(task);
 
         return NoContent();
     }
