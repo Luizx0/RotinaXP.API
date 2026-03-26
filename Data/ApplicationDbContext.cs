@@ -7,6 +7,9 @@ public class ApplicationDbContext : DbContext
         : base(options)
     {
     }
-    public DbSet<Usuario> Usuarios { get; set; } = null!;
-    public DbSet<Tarefa> Tarefas { get; set; } = null!;
+
+    public DbSet<User> Users { get; set; } = null!;
+    public DbSet<TaskItem> Tasks { get; set; } = null!;
+    public DbSet<Reward> Rewards { get; set; } = null!;
+    public DbSet<DailyProgress> DailyProgresses { get; set; } = null!;
 }

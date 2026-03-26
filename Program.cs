@@ -18,7 +18,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "RotinaXP API",
         Version = "v1",
-        Description = "API de gerenciamento de usuários e tarefas",
+        Description = "REST API for managing users, tasks, progress, and rewards",
         Contact = new OpenApiContact
         {
             Name = "RotinaXP",
@@ -32,7 +32,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<UserService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

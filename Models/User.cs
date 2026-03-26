@@ -1,12 +1,13 @@
-using System.Text.Json.Serialization;
 namespace RotinaXP.API.Models;
-public class Usuario
+public class User
 {
     public int Id { get; set; }
-    public string Nome { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    public string SenhaHash { get; set; } = string.Empty;
-    public int Pontos { get; set; } = 0;
-    [JsonIgnore]
-    public List<Tarefa> Tarefas { get; set; } = new();
+    public string PasswordHash { get; set; } = string.Empty;
+    public int Points { get; set; }
+
+    public List<TaskItem> Tasks { get; set; } = new();
+    public List<Reward> Rewards { get; set; } = new();
+    public List<DailyProgress> DailyProgresses { get; set; } = new();
 }

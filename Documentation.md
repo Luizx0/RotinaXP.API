@@ -1,193 +1,71 @@
 # RotinaXP - Backend API
 
-## 📌 Visão Geral
-API REST desenvolvida em ASP.NET Core para gerenciar usuários, tarefas, progresso e recompensas em um sistema de produtividade gamificado.
+## Overview
+REST API built with ASP.NET Core to manage users, tasks, daily progress, and rewards in a gamified productivity system.
 
----
-
-## 🏗️ Tecnologias
-
-- .NET 8
+## Tech Stack
+- .NET 9
 - ASP.NET Core Web API
 - Entity Framework Core
 - PostgreSQL
 - Npgsql
-- JWT Authentication
+- Swagger / OpenAPI
 
----
+## Project Structure
+- /Controllers
+- /Models
+- /DTOs
+- /Services
+- /Data
+- /Migrations
 
-## 📁 Estrutura do Projeto
+## Initial Setup
+1. Clone the repository.
+2. Configure the database connection in appsettings.json.
+3. Apply migrations.
 
-
-/Controllers
-/Models
-/DTOs
-/Services
-/Data
-/Migrations
-
-
----
-
-## ⚙️ Configuração Inicial
-
-### 1. Clonar projeto
-
-git clone ...
-
-
-### 2. Configurar banco (appsettings.json)
-
-
-"ConnectionStrings": {
-"DefaultConnection": "Host=localhost;Port=5432;Database=rotinaxp;Username=postgres;Password=senha"
-}
-
-
-### 3. Rodar migrations
-
-
-Add-Migration InitialCreate
-Update-Database
-
-
----
-
-## 🔐 Autenticação
-
-- JWT Token
-- Login retorna token
-- Rotas protegidas com `[Authorize]`
-
----
-
-## 📦 Entidades
-
-### Usuario
+## Domain Entities
+### User
 - Id
-- Nome
+- Name
 - Email
-- SenhaHash
-- Pontos
+- PasswordHash
+- Points
 
-### Tarefa
+### TaskItem
 - Id
-- Nome
-- Descricao
-- Concluida
-- Prioridade
-- Frequencia
-- UsuarioId
+- Title
+- IsCompleted
+- UserId
 
-### ProgressoDiario
+### DailyProgress
 - Id
-- Data
-- TarefasConcluidas
-- PontosGanhos
-- UsuarioId
+- Date
+- CompletedTasksCount
+- UserId
 
-### Recompensa
+### Reward
 - Id
-- Nome
-- CustoPontos
-- UsuarioId
-- DataResgate
+- Title
+- PointsCost
+- UserId
 
----
+## Available Endpoints
+### Users
+- GET /api/users
+- GET /api/users/{id}
+- POST /api/users
+- PUT /api/users/{id}
+- DELETE /api/users/{id}
 
-## 🔌 Endpoints
+### Tasks
+- GET /api/tasks
+- GET /api/tasks/{id}
+- GET /api/tasks/user/{userId}
+- POST /api/tasks
+- PUT /api/tasks/{id}
+- DELETE /api/tasks/{id}
 
-### 🔐 Auth
-
-#### POST /api/auth/register
-Cria usuário
-
-#### POST /api/auth/login
-Retorna JWT
-
----
-
-### 👤 Usuário
-
-#### GET /api/user
-Retorna dados do usuário
-
-#### PUT /api/user
-Atualiza dados
-
-#### DELETE /api/user
-Deleta conta
-
----
-
-### ✅ Tarefas
-
-#### GET /api/tasks
-Lista tarefas
-
-#### POST /api/tasks
-Cria tarefa
-
-#### PUT /api/tasks/{id}
-Edita tarefa
-
-#### DELETE /api/tasks/{id}
-Remove tarefa
-
-#### PATCH /api/tasks/{id}/complete
-Marca como concluída
-
----
-
-### 📊 Progresso
-
-#### GET /api/progress
-Lista histórico
-
-#### GET /api/progress/{date}
-Busca por data
-
----
-
-### 🎁 Recompensas
-
-#### GET /api/rewards
-Lista recompensas
-
-#### POST /api/rewards
-Cria recompensa
-
-#### POST /api/rewards/{id}/redeem
-Resgata recompensa
-
----
-
-## 🧠 Regras de Negócio
-
-- Ao concluir tarefa:
-  - Soma pontos ao usuário
-  - Atualiza progresso diário
-
-- Resgatar recompensa:
-  - Verifica saldo
-  - Deduz pontos
-
----
-
-## 🚀 Fluxo da Aplicação
-
-1. Usuário faz login
-2. Recebe JWT
-3. Front envia token
-4. API valida token
-5. API acessa banco
-6. Retorna dados
-
----
-
-## 📌 Próximos Passos
-
-- Refresh Token
-- Logs
-- Validação com FluentValidation
-- Testes unitários
+## Notes
+- Naming is standardized in English across models, DTOs, services, controllers, and migrations.
+- Migrations were regenerated to match the current standardized model.
