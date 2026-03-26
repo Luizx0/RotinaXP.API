@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "LMgx23AajfU=",
+  "dgSpecHash": "nKuIQlv6bKc=",
   "success": true,
   "projectFilePath": "D:\\Luizx\\!Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj",
   "expectedPackageFiles": [
@@ -53,18 +53,5 @@
     "C:\\Users\\ivoma\\.nuget\\packages\\system.text.json\\9.0.1\\system.text.json.9.0.1.nupkg.sha512",
     "C:\\Users\\ivoma\\.nuget\\packages\\system.threading.channels\\7.0.0\\system.threading.channels.7.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "message": "RotinaXP.API depends on Swashbuckle.AspNetCore (>= 6.10.0) but Swashbuckle.AspNetCore 6.10.0 was not found. Swashbuckle.AspNetCore 7.0.0 was resolved instead.",
-      "projectPath": "D:\\Luizx\\!Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj",
-      "warningLevel": 1,
-      "filePath": "D:\\Luizx\\!Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj",
-      "libraryId": "Swashbuckle.AspNetCore",
-      "targetGraphs": [
-        "net9.0"
-      ]
-    }
-  ]
+  "logs": []
 }
