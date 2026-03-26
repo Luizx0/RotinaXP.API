@@ -1,14 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-
 #nullable disable
-
 namespace RotinaXP.API.Migrations
 {
-    /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -26,7 +22,6 @@ namespace RotinaXP.API.Migrations
                 {
                     table.PrimaryKey("PK_Usuarios", x => x.Id);
                 });
-
             migrationBuilder.CreateTable(
                 name: "Tarefas",
                 columns: table => new
@@ -47,19 +42,15 @@ namespace RotinaXP.API.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
-
             migrationBuilder.CreateIndex(
                 name: "IX_Tarefas_UsuarioId",
                 table: "Tarefas",
                 column: "UsuarioId");
         }
-
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "Tarefas");
-
             migrationBuilder.DropTable(
                 name: "Usuarios");
         }

@@ -6,17 +6,13 @@
 //     the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
-
 using System;
 using System.Reflection;
-
 [assembly: System.Reflection.AssemblyCompanyAttribute("RotinaXP.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c022c943c61df66ea2d11d92b35cff9765a66968")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1702be0e08a2c55c9cf48df4136bfd9efc079cf5")]
 [assembly: System.Reflection.AssemblyProductAttribute("RotinaXP.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RotinaXP.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
-
 // Gerado pela classe WriteCodeFragment do MSBuild.
-
