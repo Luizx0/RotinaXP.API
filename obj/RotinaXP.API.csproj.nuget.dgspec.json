@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Luizx\\!Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj": {}
+    "D:\\Luizx\\Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj": {}
   },
   "projects": {
-    "D:\\Luizx\\!Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj": {
+    "D:\\Luizx\\Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Luizx\\!Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj",
+        "projectUniqueName": "D:\\Luizx\\Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj",
         "projectName": "RotinaXP.API",
-        "projectPath": "D:\\Luizx\\!Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj",
+        "projectPath": "D:\\Luizx\\Program\\RotinaXP\\RotinaXP.API\\RotinaXP.API.csproj",
         "packagesPath": "C:\\Users\\ivoma\\.nuget\\packages\\",
-        "outputPath": "D:\\Luizx\\!Program\\RotinaXP\\RotinaXP.API\\obj\\",
+        "outputPath": "D:\\Luizx\\Program\\RotinaXP\\RotinaXP.API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
