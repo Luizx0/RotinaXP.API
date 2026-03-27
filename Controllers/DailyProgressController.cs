@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RotinaXP.API.DTOs;
 using RotinaXP.API.Models;
 using RotinaXP.API.Services;
 
@@ -16,15 +17,16 @@ public class DailyProgressController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<DailyProgress>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<DailyProgressDTO>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
         var progress = await _service.GetAllAsync();
-        return Ok(progress);
+        var response = progress.Select(ToDto).ToList();
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(DailyProgress), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DailyProgressDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
@@ -32,11 +34,11 @@ public class DailyProgressController : ControllerBase
         if (progress == null)
             return NotFound(new { message = "Daily progress not found" });
 
-        return Ok(progress);
+        return Ok(ToDto(progress));
     }
 
     [HttpGet("user/{userId}")]
-    [ProducesResponseType(typeof(List<DailyProgress>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<DailyProgressDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByUser(int userId)
     {
@@ -45,6 +47,18 @@ public class DailyProgressController : ControllerBase
             return NotFound(new { message = "User not found" });
 
         var progress = await _service.GetByUserAsync(userId);
-        return Ok(progress);
+        var response = progress.Select(ToDto).ToList();
+        return Ok(response);
+    }
+
+    private static DailyProgressDTO ToDto(DailyProgress progress)
+    {
+        return new DailyProgressDTO
+        {
+            Id = progress.Id,
+            Date = progress.Date,
+            CompletedTasksCount = progress.CompletedTasksCount,
+            UserId = progress.UserId
+        };
     }
 }

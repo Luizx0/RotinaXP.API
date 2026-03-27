@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using RotinaXP.API.DTOs;
 using RotinaXP.API.Models;
 using RotinaXP.API.Services;
 
@@ -16,15 +17,16 @@ public class RewardsController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<Reward>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RewardDTO>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
         var rewards = await _service.GetAllAsync();
-        return Ok(rewards);
+        var response = rewards.Select(ToDto).ToList();
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(Reward), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RewardDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
@@ -32,11 +34,11 @@ public class RewardsController : ControllerBase
         if (reward == null)
             return NotFound(new { message = "Reward not found" });
 
-        return Ok(reward);
+        return Ok(ToDto(reward));
     }
 
     [HttpGet("user/{userId}")]
-    [ProducesResponseType(typeof(List<Reward>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<RewardDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByUser(int userId)
     {
@@ -45,13 +47,14 @@ public class RewardsController : ControllerBase
             return NotFound(new { message = "User not found" });
 
         var rewards = await _service.GetByUserAsync(userId);
-        return Ok(rewards);
+        var response = rewards.Select(ToDto).ToList();
+        return Ok(response);
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(Reward), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(RewardDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreateRewardRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateRewardDto request)
     {
         if (string.IsNullOrWhiteSpace(request.Title))
             return BadRequest(new { message = "Title is required" });
@@ -72,14 +75,14 @@ public class RewardsController : ControllerBase
 
         await _service.CreateAsync(reward);
 
-        return CreatedAtAction(nameof(GetById), new { id = reward.Id }, reward);
+    return CreatedAtAction(nameof(GetById), new { id = reward.Id }, ToDto(reward));
     }
 
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateRewardRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateRewardDto request)
     {
         var reward = await _service.GetByIdAsync(id);
         if (reward == null)
@@ -136,7 +139,15 @@ public class RewardsController : ControllerBase
             pointsRemaining = result.PointsRemaining
         });
     }
-}
 
-public record CreateRewardRequest(string Title, int PointsCost, int UserId);
-public record UpdateRewardRequest(string? Title, int? PointsCost);
+    private static RewardDTO ToDto(Reward reward)
+    {
+        return new RewardDTO
+        {
+            Id = reward.Id,
+            Title = reward.Title,
+            PointsCost = reward.PointsCost,
+            UserId = reward.UserId
+        };
+    }
+}
