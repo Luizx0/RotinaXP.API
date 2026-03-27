@@ -28,5 +28,17 @@
         <member name="M:RotinaXP.API.Migrations.UpdateRelations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:RotinaXP.API.Migrations.AddUniqueEmailConstraint">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddUniqueEmailConstraint.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddUniqueEmailConstraint.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddUniqueEmailConstraint.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

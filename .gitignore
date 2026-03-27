@@ -1,0 +1,40 @@
+# Build output
+bin/
+obj/
+
+# Test output
+test-results/
+TestResults/
+coverage/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / ReSharper
+.idea/
+*.sln.iml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# NuGet packages
+*.nupkg
+*.snupkg
+
+# Publish artifacts
+publish/
+
+# Dotnet local tools cache (optional)
+.dotnet/
