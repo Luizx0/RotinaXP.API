@@ -1,11 +1,62 @@
 @RotinaXP.API_HostAddress = http://localhost:5252
 
+POST {{RotinaXP.API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+	"name": "Luiz",
+	"email": "luiz@example.com",
+	"password": "123456"
+}
+
+###
+
+POST {{RotinaXP.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+	"email": "luiz@example.com",
+	"password": "123456"
+}
+
+###
+
 GET {{RotinaXP.API_HostAddress}}/api/users
 Accept: application/json
 
 ###
 
 GET {{RotinaXP.API_HostAddress}}/api/tasks
+Accept: application/json
+
+###
+
+PUT {{RotinaXP.API_HostAddress}}/api/tasks/1
+Content-Type: application/json
+
+{
+	"isCompleted": true
+}
+
+###
+
+POST {{RotinaXP.API_HostAddress}}/api/rewards
+Content-Type: application/json
+
+{
+	"title": "Coffee Break",
+	"pointsCost": 20,
+	"userId": 1
+}
+
+###
+
+POST {{RotinaXP.API_HostAddress}}/api/rewards/1/redeem
+Accept: application/json
+
+###
+
+GET {{RotinaXP.API_HostAddress}}/api/dailyprogress/user/1
 Accept: application/json
 
 ###

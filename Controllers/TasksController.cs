@@ -74,23 +74,29 @@ public class TasksController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskRequest request)
     {
-        var task = await _service.GetByIdAsync(id);
-        if (task == null)
-            return NotFound(new { message = "Task not found" });
+        var result = await _service.UpdateWithGamificationAsync(id, request.Title, request.IsCompleted);
+        if (!result.Success)
+        {
+            if (result.Message == "Task not found")
+                return NotFound(new { message = result.Message });
 
-        if (!string.IsNullOrWhiteSpace(request.Title))
-            task.Title = request.Title;
+            if (result.Message == "Completed tasks cannot be reopened")
+                return Conflict(new { message = result.Message });
 
-        if (request.IsCompleted.HasValue)
-            task.IsCompleted = request.IsCompleted.Value;
+            return BadRequest(new { message = result.Message });
+        }
 
-        await _service.UpdateAsync(task);
-
-        return NoContent();
+        return Ok(new
+        {
+            message = result.Message,
+            pointsAwarded = result.PointsAwarded
+        });
     }
 
     [HttpDelete("{id}")]

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using RotinaXP.API.Models;
+using RotinaXP.API.DTOs;
 using RotinaXP.API.Services;
 namespace RotinaXP.API.Controllers;
 [ApiController]
@@ -7,6 +7,7 @@ namespace RotinaXP.API.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly UserService _service;
+    private const string DuplicateEmailMessage = "Email is already registered in the system";
 
     public UsersController(UserService service)
     {
@@ -14,20 +15,20 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<User>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<UserDTO>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _service.GetAllAsync();
+        var users = await _service.GetAllUsersAsync();
 
         return Ok(users);
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
-        var user = await _service.GetByIdAsync(id);
+        var user = await _service.GetUserByIdAsync(id);
 
         if (user == null)
             return NotFound(new { message = "User not found" });
@@ -36,50 +37,55 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(User), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(UserDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Create([FromBody] RegisterRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Email))
-            return BadRequest(new { message = "Name and Email are required" });
-
-        var existingUser = await _service.GetByEmailAsync(request.Email);
-
-        if (existingUser != null)
-            return BadRequest(new { message = "Email is already registered" });
-
-        var user = new User
+        var result = await _service.RegisterAsync(request);
+        if (!result.Success || result.User == null)
         {
-            Name = request.Name,
-            Email = request.Email,
-            PasswordHash = request.PasswordHash,
-            Points = request.Points
-        };
+            if (result.Message == DuplicateEmailMessage)
+            {
+                return Conflict(new ProblemDetails
+                {
+                    Title = "Conflict",
+                    Detail = result.Message,
+                    Status = StatusCodes.Status409Conflict
+                });
+            }
 
-        await _service.CreateAsync(user);
+            return BadRequest(new { message = result.Message });
+        }
 
-        return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
+        return CreatedAtAction(nameof(GetById), new { id = result.User.Id }, result.User);
     }
 
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
     {
-        var user = await _service.GetByIdAsync(id);
-        if (user == null)
-            return NotFound(new { message = "User not found" });
+        var result = await _service.UpdateAsync(id, request);
+        if (!result.Success)
+        {
+            if (result.Message == "User not found")
+                return NotFound(new { message = result.Message });
 
-        if (!string.IsNullOrWhiteSpace(request.Name))
-            user.Name = request.Name;
+            if (result.Message == DuplicateEmailMessage)
+            {
+                return Conflict(new ProblemDetails
+                {
+                    Title = "Conflict",
+                    Detail = result.Message,
+                    Status = StatusCodes.Status409Conflict
+                });
+            }
 
-        if (!string.IsNullOrWhiteSpace(request.Email))
-            user.Email = request.Email;
-
-        if (request.Points.HasValue)
-            user.Points = request.Points.Value;
-
-        await _service.UpdateAsync(user);
+            return BadRequest(new { message = result.Message });
+        }
 
         return NoContent();
     }
@@ -89,15 +95,10 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id)
     {
-        var user = await _service.GetByIdAsync(id);
-        if (user == null)
-            return NotFound(new { message = "User not found" });
-
-        await _service.DeleteAsync(user);
+        var result = await _service.DeleteAsync(id);
+        if (!result.Success)
+            return NotFound(new { message = result.Message });
 
         return NoContent();
     }
 }
-
-public record CreateUserRequest(string Name, string Email, string PasswordHash, int Points = 0);
-public record UpdateUserRequest(string? Name, string? Email, int? Points);

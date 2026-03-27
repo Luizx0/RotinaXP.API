@@ -1,9 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using RotinaXP.API.Data;
 using RotinaXP.API.DTOs;
 using RotinaXP.API.Models;
-using System.Security.Cryptography;
-using System.Text;
 namespace RotinaXP.API.Services;
 public class UserService
 {
@@ -18,6 +17,20 @@ public class UserService
     {
         return await _context.Users
             .Include(u => u.Tasks)
+            .ToListAsync();
+    }
+
+    public async Task<List<UserDTO>> GetAllUsersAsync()
+    {
+        return await _context.Users
+            .AsNoTracking()
+            .Select(u => new UserDTO
+            {
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email,
+                Points = u.Points
+            })
             .ToListAsync();
     }
 
@@ -82,6 +95,10 @@ public class UserService
 
             var userDTO = MapToDto(user);
             return (true, userDTO, "User registered successfully");
+        }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            return (false, null, "Email is already registered in the system");
         }
         catch (Exception ex)
         {
@@ -150,6 +167,10 @@ public class UserService
 
             var userDTO = MapToDto(user);
             return (true, userDTO, "User updated successfully");
+        }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            return (false, null, "Email is already registered in the system");
         }
         catch (Exception ex)
         {
@@ -238,13 +259,17 @@ public class UserService
 
     private string HashPassword(string password)
     {
-        using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
+        return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
     private bool VerifyPassword(string password, string hash)
     {
-        return HashPassword(password).Equals(hash, StringComparison.Ordinal);
+        return BCrypt.Net.BCrypt.Verify(password, hash);
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex)
+    {
+        return ex.InnerException is PostgresException postgresEx
+            && postgresEx.SqlState == PostgresErrorCodes.UniqueViolation;
     }
 }
