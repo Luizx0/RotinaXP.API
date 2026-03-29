@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RotinaXP.API.Data;
+using RotinaXP.API.DTOs;
 using RotinaXP.API.Models;
 
 namespace RotinaXP.API.Services;
@@ -18,15 +19,30 @@ public class TaskService
     public async Task<List<TaskItem>> GetAllAsync()
     {
         return await _context.Tasks
-            .Include(t => t.User)
+            .AsNoTracking()
             .ToListAsync();
     }
 
     public async Task<TaskItem?> GetByIdAsync(int id)
     {
         return await _context.Tasks
-            .Include(t => t.User)
+            .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task<TaskDTO?> GetTaskDtoByIdForUserAsync(int id, int userId)
+    {
+        return await _context.Tasks
+            .AsNoTracking()
+            .Where(t => t.Id == id && t.UserId == userId)
+            .Select(t => new TaskDTO
+            {
+                Id = t.Id,
+                Title = t.Title,
+                IsCompleted = t.IsCompleted,
+                UserId = t.UserId
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<TaskItem?> GetByIdForUserAsync(int id, int userId)
@@ -38,9 +54,41 @@ public class TaskService
     public async Task<List<TaskItem>> GetByUserAsync(int userId)
     {
         return await _context.Tasks
-            .Include(t => t.User)
+            .AsNoTracking()
             .Where(t => t.UserId == userId)
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<TaskDTO>> GetByUserPagedAsync(int userId, int page, int pageSize)
+    {
+        var (normalizedPage, normalizedPageSize) = NormalizePagination(page, pageSize);
+
+        var query = _context.Tasks
+            .AsNoTracking()
+            .Where(t => t.UserId == userId)
+            .OrderByDescending(t => t.Id)
+            .Select(t => new TaskDTO
+            {
+                Id = t.Id,
+                Title = t.Title,
+                IsCompleted = t.IsCompleted,
+                UserId = t.UserId
+            });
+
+        var totalItems = await query.CountAsync();
+        var items = await query
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
+            .ToListAsync();
+
+        return new PagedResult<TaskDTO>
+        {
+            Page = normalizedPage,
+            PageSize = normalizedPageSize,
+            TotalItems = totalItems,
+            TotalPages = (int)Math.Ceiling(totalItems / (double)normalizedPageSize),
+            Items = items
+        };
     }
 
     public async Task<bool> UserExistsAsync(int userId)
@@ -194,5 +242,18 @@ public class TaskService
         {
             progress.CompletedTasksCount += 1;
         }
+    }
+
+    private static (int Page, int PageSize) NormalizePagination(int page, int pageSize)
+    {
+        var normalizedPage = page < PaginationDefaults.DefaultPage
+            ? PaginationDefaults.DefaultPage
+            : page;
+
+        var normalizedPageSize = pageSize < 1
+            ? PaginationDefaults.DefaultPageSize
+            : Math.Min(pageSize, PaginationDefaults.MaxPageSize);
+
+        return (normalizedPage, normalizedPageSize);
     }
 }

@@ -16,34 +16,58 @@ public class UserService
     public async Task<List<User>> GetAllAsync()
     {
         return await _context.Users
-            .Include(u => u.Tasks)
+            .AsNoTracking()
             .ToListAsync();
     }
 
     public async Task<List<UserDTO>> GetAllUsersAsync()
     {
-        return await _context.Users
+        var pagedResult = await GetAllUsersPagedAsync(PaginationDefaults.DefaultPage, PaginationDefaults.DefaultPageSize);
+        return pagedResult.Items;
+    }
+
+    public async Task<PagedResult<UserDTO>> GetAllUsersPagedAsync(int page, int pageSize)
+    {
+        var (normalizedPage, normalizedPageSize) = NormalizePagination(page, pageSize);
+
+        var query = _context.Users
             .AsNoTracking()
+            .OrderBy(u => u.Id)
             .Select(u => new UserDTO
             {
                 Id = u.Id,
                 Name = u.Name,
                 Email = u.Email,
                 Points = u.Points
-            })
+            });
+
+        var totalItems = await query.CountAsync();
+        var items = await query
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
             .ToListAsync();
+
+        return new PagedResult<UserDTO>
+        {
+            Page = normalizedPage,
+            PageSize = normalizedPageSize,
+            TotalItems = totalItems,
+            TotalPages = (int)Math.Ceiling(totalItems / (double)normalizedPageSize),
+            Items = items
+        };
     }
 
     public async Task<User?> GetByIdAsync(int id)
     {
         return await _context.Users
-            .Include(u => u.Tasks)
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _context.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
@@ -126,18 +150,32 @@ public class UserService
 
     public async Task<UserDTO?> GetUserByIdAsync(int id)
     {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == id);
-
-        return user == null ? null : MapToDto(user);
+        return await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+            .Select(u => new UserDTO
+            {
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email,
+                Points = u.Points
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<UserDTO?> GetUserByEmailAsync(string email)
     {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == email);
-
-        return user == null ? null : MapToDto(user);
+        return await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Email == email)
+            .Select(u => new UserDTO
+            {
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email,
+                Points = u.Points
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<(bool Success, UserDTO? User, string Message)> UpdateAsync(int id, UpdateUserRequest request)
@@ -271,5 +309,18 @@ public class UserService
     {
         return ex.InnerException is PostgresException postgresEx
             && postgresEx.SqlState == PostgresErrorCodes.UniqueViolation;
+    }
+
+    private static (int Page, int PageSize) NormalizePagination(int page, int pageSize)
+    {
+        var normalizedPage = page < PaginationDefaults.DefaultPage
+            ? PaginationDefaults.DefaultPage
+            : page;
+
+        var normalizedPageSize = pageSize < 1
+            ? PaginationDefaults.DefaultPageSize
+            : Math.Min(pageSize, PaginationDefaults.MaxPageSize);
+
+        return (normalizedPage, normalizedPageSize);
     }
 }

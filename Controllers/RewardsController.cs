@@ -20,16 +20,15 @@ public class RewardsController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<RewardDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<RewardDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = PaginationDefaults.DefaultPage, [FromQuery] int pageSize = PaginationDefaults.DefaultPageSize)
     {
         var authenticatedUserId = User.GetAuthenticatedUserId();
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var rewards = await _service.GetByUserAsync(authenticatedUserId.Value);
-        var response = rewards.Select(ToDto).ToList();
+        var response = await _service.GetByUserPagedAsync(authenticatedUserId.Value, page, pageSize);
         return Ok(response);
     }
 
@@ -43,23 +42,22 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var reward = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
+        var reward = await _service.GetRewardDtoByIdForUserAsync(id, authenticatedUserId.Value);
         if (reward == null)
             return NotFound(new { message = "Reward not found" });
 
-        return Ok(ToDto(reward));
+        return Ok(reward);
     }
 
     [HttpGet("user/{userId}")]
     [Authorize(Policy = "ResourceOwner")]
-    [ProducesResponseType(typeof(List<RewardDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<RewardDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetByUser(int userId)
+    public async Task<IActionResult> GetByUser(int userId, [FromQuery] int page = PaginationDefaults.DefaultPage, [FromQuery] int pageSize = PaginationDefaults.DefaultPageSize)
     {
-        var rewards = await _service.GetByUserAsync(userId);
-        var response = rewards.Select(ToDto).ToList();
+        var response = await _service.GetByUserPagedAsync(userId, page, pageSize);
         return Ok(response);
     }
 
@@ -92,7 +90,8 @@ public class RewardsController : ControllerBase
 
         await _service.CreateAsync(reward);
 
-    return CreatedAtAction(nameof(GetById), new { id = reward.Id }, ToDto(reward));
+        var createdReward = await _service.GetRewardDtoByIdForUserAsync(reward.Id, authenticatedUserId.Value);
+        return CreatedAtAction(nameof(GetById), new { id = reward.Id }, createdReward);
     }
 
     [HttpPut("{id}")]
@@ -173,16 +172,5 @@ public class RewardsController : ControllerBase
             message = result.Message,
             pointsRemaining = result.PointsRemaining
         });
-    }
-
-    private static RewardDTO ToDto(Reward reward)
-    {
-        return new RewardDTO
-        {
-            Id = reward.Id,
-            Title = reward.Title,
-            PointsCost = reward.PointsCost,
-            UserId = reward.UserId
-        };
     }
 }

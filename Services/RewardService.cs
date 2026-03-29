@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RotinaXP.API.Data;
+using RotinaXP.API.DTOs;
 using RotinaXP.API.Models;
 
 namespace RotinaXP.API.Services;
@@ -40,6 +41,53 @@ public class RewardService
             .AsNoTracking()
             .Where(r => r.UserId == userId)
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<RewardDTO>> GetByUserPagedAsync(int userId, int page, int pageSize)
+    {
+        var (normalizedPage, normalizedPageSize) = NormalizePagination(page, pageSize);
+
+        var query = _context.Rewards
+            .AsNoTracking()
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.Id)
+            .Select(r => new RewardDTO
+            {
+                Id = r.Id,
+                Title = r.Title,
+                PointsCost = r.PointsCost,
+                UserId = r.UserId
+            });
+
+        var totalItems = await query.CountAsync();
+        var items = await query
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
+            .ToListAsync();
+
+        return new PagedResult<RewardDTO>
+        {
+            Page = normalizedPage,
+            PageSize = normalizedPageSize,
+            TotalItems = totalItems,
+            TotalPages = (int)Math.Ceiling(totalItems / (double)normalizedPageSize),
+            Items = items
+        };
+    }
+
+    public async Task<RewardDTO?> GetRewardDtoByIdForUserAsync(int id, int userId)
+    {
+        return await _context.Rewards
+            .AsNoTracking()
+            .Where(r => r.Id == id && r.UserId == userId)
+            .Select(r => new RewardDTO
+            {
+                Id = r.Id,
+                Title = r.Title,
+                PointsCost = r.PointsCost,
+                UserId = r.UserId
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<bool> UserExistsAsync(int userId)
@@ -142,5 +190,18 @@ public class RewardService
         user.Points -= pointsToDeduct;
         user.RowVersion += 1;
         return true;
+    }
+
+    private static (int Page, int PageSize) NormalizePagination(int page, int pageSize)
+    {
+        var normalizedPage = page < PaginationDefaults.DefaultPage
+            ? PaginationDefaults.DefaultPage
+            : page;
+
+        var normalizedPageSize = pageSize < 1
+            ? PaginationDefaults.DefaultPageSize
+            : Math.Min(pageSize, PaginationDefaults.MaxPageSize);
+
+        return (normalizedPage, normalizedPageSize);
     }
 }

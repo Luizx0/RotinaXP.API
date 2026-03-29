@@ -18,9 +18,9 @@ public class UsersController : ControllerBase
 
     [HttpGet]
     [Authorize]
-    [ProducesResponseType(typeof(List<UserDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<UserDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = PaginationDefaults.DefaultPage, [FromQuery] int pageSize = PaginationDefaults.DefaultPageSize)
     {
         var authenticatedUserId = User.GetAuthenticatedUserId();
         if (!authenticatedUserId.HasValue)
@@ -30,9 +30,19 @@ public class UsersController : ControllerBase
         if (currentUser == null)
             return NotFound(new { message = "User not found" });
 
-        var users = new List<UserDTO> { currentUser };
+        var (normalizedPage, normalizedPageSize) = NormalizePagination(page, pageSize);
+        var hasCurrentUserOnPage = normalizedPage == PaginationDefaults.DefaultPage;
 
-        return Ok(users);
+        var response = new PagedResult<UserDTO>
+        {
+            Page = normalizedPage,
+            PageSize = normalizedPageSize,
+            TotalItems = 1,
+            TotalPages = 1,
+            Items = hasCurrentUserOnPage ? [currentUser] : []
+        };
+
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
@@ -122,5 +132,18 @@ public class UsersController : ControllerBase
             return NotFound(new { message = result.Message });
 
         return NoContent();
+    }
+
+    private static (int Page, int PageSize) NormalizePagination(int page, int pageSize)
+    {
+        var normalizedPage = page < PaginationDefaults.DefaultPage
+            ? PaginationDefaults.DefaultPage
+            : page;
+
+        var normalizedPageSize = pageSize < 1
+            ? PaginationDefaults.DefaultPageSize
+            : Math.Min(pageSize, PaginationDefaults.MaxPageSize);
+
+        return (normalizedPage, normalizedPageSize);
     }
 }

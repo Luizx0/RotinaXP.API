@@ -64,8 +64,9 @@ public class TaskGamificationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, progressResponse.StatusCode);
         var progressJson = await progressResponse.Content.ReadFromJsonAsync<JsonElement>();
 
-        Assert.True(progressJson.ValueKind == JsonValueKind.Array);
-        Assert.True(progressJson.GetArrayLength() >= 1);
-        Assert.Equal(1, progressJson[0].GetProperty("completedTasksCount").GetInt32());
+        Assert.True(progressJson.TryGetProperty("items", out var items));
+        Assert.True(items.ValueKind == JsonValueKind.Array);
+        Assert.True(items.GetArrayLength() >= 1);
+        Assert.Equal(1, items[0].GetProperty("completedTasksCount").GetInt32());
     }
 }

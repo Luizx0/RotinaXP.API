@@ -52,5 +52,17 @@
         <member name="M:RotinaXP.API.Migrations.AddConcurrencyAndDailyProgressUniqueIndex.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:RotinaXP.API.Migrations.AddHighLoadIndexes">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddHighLoadIndexes.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddHighLoadIndexes.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddHighLoadIndexes.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

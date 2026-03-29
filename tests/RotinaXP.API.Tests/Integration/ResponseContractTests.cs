@@ -128,9 +128,10 @@ public class ResponseContractTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, progressResponse.StatusCode);
 
         var progressJson = await progressResponse.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.True(progressJson.ValueKind == JsonValueKind.Array);
-        Assert.True(progressJson.GetArrayLength() >= 1);
-        Assert.False(progressJson[0].TryGetProperty("user", out _));
+        Assert.True(progressJson.TryGetProperty("items", out var items));
+        Assert.True(items.ValueKind == JsonValueKind.Array);
+        Assert.True(items.GetArrayLength() >= 1);
+        Assert.False(items[0].TryGetProperty("user", out _));
     }
 
     private async Task<(int UserId, string Token)> RegisterUserAsync(string email)

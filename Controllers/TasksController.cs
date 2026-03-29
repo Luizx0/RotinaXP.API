@@ -18,16 +18,15 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<TaskDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<TaskDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = PaginationDefaults.DefaultPage, [FromQuery] int pageSize = PaginationDefaults.DefaultPageSize)
     {
         var authenticatedUserId = User.GetAuthenticatedUserId();
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var tasks = await _service.GetByUserAsync(authenticatedUserId.Value);
-        var response = tasks.Select(ToDto).ToList();
+        var response = await _service.GetByUserPagedAsync(authenticatedUserId.Value, page, pageSize);
 
         return Ok(response);
     }
@@ -42,24 +41,23 @@ public class TasksController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var task = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
+        var task = await _service.GetTaskDtoByIdForUserAsync(id, authenticatedUserId.Value);
 
         if (task == null)
             return NotFound(new { message = "Task not found" });
 
-        return Ok(ToDto(task));
+        return Ok(task);
     }
 
     [HttpGet("user/{userId}")]
     [Authorize(Policy = "ResourceOwner")]
-    [ProducesResponseType(typeof(List<TaskDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<TaskDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetByUser(int userId)
+    public async Task<IActionResult> GetByUser(int userId, [FromQuery] int page = PaginationDefaults.DefaultPage, [FromQuery] int pageSize = PaginationDefaults.DefaultPageSize)
     {
-        var tasks = await _service.GetByUserAsync(userId);
-        var response = tasks.Select(ToDto).ToList();
+        var response = await _service.GetByUserPagedAsync(userId, page, pageSize);
 
         return Ok(response);
     }
@@ -90,7 +88,8 @@ public class TasksController : ControllerBase
 
         await _service.CreateAsync(task);
 
-        return CreatedAtAction(nameof(GetById), new { id = task.Id }, ToDto(task));
+        var createdTask = await _service.GetTaskDtoByIdForUserAsync(task.Id, authenticatedUserId.Value);
+        return CreatedAtAction(nameof(GetById), new { id = task.Id }, createdTask);
     }
 
     [HttpPut("{id}")]
@@ -141,16 +140,5 @@ public class TasksController : ControllerBase
         await _service.DeleteAsync(task);
 
         return NoContent();
-    }
-
-    private static TaskDTO ToDto(TaskItem task)
-    {
-        return new TaskDTO
-        {
-            Id = task.Id,
-            Title = task.Title,
-            IsCompleted = task.IsCompleted,
-            UserId = task.UserId
-        };
     }
 }

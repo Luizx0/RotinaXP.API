@@ -26,6 +26,19 @@ public class ApplicationDbContext : DbContext
             .HasDefaultValue(0L)
             .IsConcurrencyToken();
 
+        modelBuilder.Entity<TaskItem>()
+            .HasIndex(t => t.UserId);
+
+        modelBuilder.Entity<Reward>()
+            .HasIndex(r => r.UserId);
+
+        modelBuilder.Entity<DailyProgress>()
+            .Property(p => p.Date)
+            .HasColumnType("date");
+
+        modelBuilder.Entity<DailyProgress>()
+            .HasIndex(p => p.UserId);
+
         modelBuilder.Entity<DailyProgress>()
             .HasIndex(p => new { p.UserId, p.Date })
             .IsUnique();
