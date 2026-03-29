@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RotinaXP.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c859c10b9be0a3d39cdb090ac81cc39d20d53349")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ed6d72bcc65ac70eed29805e7aa95e3118e06dac")]
 [assembly: System.Reflection.AssemblyProductAttribute("RotinaXP.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RotinaXP.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

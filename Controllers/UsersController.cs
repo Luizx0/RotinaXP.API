@@ -39,6 +39,8 @@ public class UsersController : ControllerBase
             PageSize = normalizedPageSize,
             TotalItems = 1,
             TotalPages = 1,
+            HasNext = false,
+            HasPrevious = false,
             Items = hasCurrentUserOnPage ? [currentUser] : []
         };
 

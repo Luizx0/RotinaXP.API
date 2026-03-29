@@ -81,12 +81,18 @@ public class TaskService
             .Take(normalizedPageSize)
             .ToListAsync();
 
+        var totalPages = totalItems == 0
+            ? 0
+            : (int)Math.Ceiling(totalItems / (double)normalizedPageSize);
+
         return new PagedResult<TaskDTO>
         {
             Page = normalizedPage,
             PageSize = normalizedPageSize,
             TotalItems = totalItems,
-            TotalPages = (int)Math.Ceiling(totalItems / (double)normalizedPageSize),
+            TotalPages = totalPages,
+            HasNext = totalPages > 0 && normalizedPage < totalPages,
+            HasPrevious = normalizedPage > PaginationDefaults.DefaultPage && totalPages > 0,
             Items = items
         };
     }
