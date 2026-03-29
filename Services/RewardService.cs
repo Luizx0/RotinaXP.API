@@ -6,6 +6,7 @@ namespace RotinaXP.API.Services;
 
 public class RewardService
 {
+    public const string ConcurrencyConflictMessage = "Concurrency conflict. Please retry operation.";
     private readonly ApplicationDbContext _context;
 
     public RewardService(ApplicationDbContext context)
@@ -67,21 +68,79 @@ public class RewardService
 
     public async Task<(bool Success, string Message, int PointsRemaining)> RedeemAsync(int rewardId, int userId)
     {
-        var reward = await _context.Rewards.FirstOrDefaultAsync(r => r.Id == rewardId && r.UserId == userId);
-        if (reward == null)
-            return (false, "Reward not found", 0);
+        await using var transaction = _context.Database.IsRelational()
+            ? await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted)
+            : null;
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == reward.UserId);
-        if (user == null)
-            return (false, "User not found", 0);
+        try
+        {
+            var reward = await _context.Rewards.FirstOrDefaultAsync(r => r.Id == rewardId && r.UserId == userId);
+            if (reward == null)
+                return (false, "Reward not found", 0);
 
-        if (user.Points < reward.PointsCost)
-            return (false, "Insufficient points balance", user.Points);
+            var userSnapshot = await _context.Users
+                .AsNoTracking()
+                .Where(u => u.Id == reward.UserId)
+                .Select(u => new { u.Id, u.Points, u.RowVersion })
+                .FirstOrDefaultAsync();
 
-        user.Points -= reward.PointsCost;
-        _context.Rewards.Remove(reward);
-        await _context.SaveChangesAsync();
+            if (userSnapshot == null)
+                return (false, "User not found", 0);
 
-        return (true, "Reward redeemed successfully", user.Points);
+            if (userSnapshot.Points < reward.PointsCost)
+                return (false, "Insufficient points balance", userSnapshot.Points);
+
+            var pointsUpdated = await TryAtomicDeductPointsAsync(
+                userSnapshot.Id,
+                userSnapshot.RowVersion,
+                reward.PointsCost);
+
+            if (!pointsUpdated)
+            {
+                if (transaction != null)
+                    await transaction.RollbackAsync();
+
+                return (false, ConcurrencyConflictMessage, 0);
+            }
+
+            _context.Rewards.Remove(reward);
+            await _context.SaveChangesAsync();
+
+            if (transaction != null)
+                await transaction.CommitAsync();
+
+            return (true, "Reward redeemed successfully", userSnapshot.Points - reward.PointsCost);
+        }
+        catch
+        {
+            if (transaction != null)
+                await transaction.RollbackAsync();
+
+            throw;
+        }
+    }
+
+    private async Task<bool> TryAtomicDeductPointsAsync(int userId, long expectedRowVersion, int pointsToDeduct)
+    {
+        if (_context.Database.IsRelational())
+        {
+            var affectedRows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                UPDATE ""Users""
+                SET ""Points"" = ""Points"" - {pointsToDeduct},
+                    ""RowVersion"" = ""RowVersion"" + 1
+                WHERE ""Id"" = {userId}
+                  AND ""RowVersion"" = {expectedRowVersion}
+                  AND ""Points"" >= {pointsToDeduct};");
+
+            return affectedRows == 1;
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null || user.RowVersion != expectedRowVersion || user.Points < pointsToDeduct)
+            return false;
+
+        user.Points -= pointsToDeduct;
+        user.RowVersion += 1;
+        return true;
     }
 }

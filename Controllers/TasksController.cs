@@ -111,7 +111,7 @@ public class TasksController : ControllerBase
             if (result.Message == "Task not found")
                 return NotFound(new { message = result.Message });
 
-            if (result.Message == "Completed tasks cannot be reopened")
+            if (result.Message == "Completed tasks cannot be reopened" || result.Message == TaskService.ConcurrencyConflictMessage)
                 return Conflict(new { message = result.Message });
 
             return BadRequest(new { message = result.Message });

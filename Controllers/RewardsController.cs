@@ -162,6 +162,9 @@ public class RewardsController : ControllerBase
             if (result.Message is "Reward not found" or "User not found")
                 return NotFound(new { message = result.Message });
 
+            if (result.Message == RewardService.ConcurrencyConflictMessage)
+                return Conflict(new { message = result.Message });
+
             return BadRequest(new { message = result.Message });
         }
 

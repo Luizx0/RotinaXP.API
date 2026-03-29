@@ -20,5 +20,14 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
+
+        modelBuilder.Entity<User>()
+            .Property(u => u.RowVersion)
+            .HasDefaultValue(0L)
+            .IsConcurrencyToken();
+
+        modelBuilder.Entity<DailyProgress>()
+            .HasIndex(p => new { p.UserId, p.Date })
+            .IsUnique();
     }
 }

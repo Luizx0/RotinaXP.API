@@ -40,5 +40,17 @@
         <member name="M:RotinaXP.API.Migrations.AddUniqueEmailConstraint.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:RotinaXP.API.Migrations.AddConcurrencyAndDailyProgressUniqueIndex">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddConcurrencyAndDailyProgressUniqueIndex.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddConcurrencyAndDailyProgressUniqueIndex.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:RotinaXP.API.Migrations.AddConcurrencyAndDailyProgressUniqueIndex.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

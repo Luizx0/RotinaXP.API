@@ -267,3 +267,11 @@ D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.Extensions.Dia
 D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore.dll
 D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Abstractions.dll
 D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.Extensions.Hosting.Abstractions.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.Abstractions.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.Logging.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll

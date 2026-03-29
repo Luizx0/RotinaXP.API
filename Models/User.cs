@@ -6,6 +6,7 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public int Points { get; set; }
+    public long RowVersion { get; set; }
 
     public List<TaskItem> Tasks { get; set; } = new();
     public List<Reward> Rewards { get; set; } = new();
