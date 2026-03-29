@@ -3,14 +3,19 @@ using Npgsql;
 using RotinaXP.API.Data;
 using RotinaXP.API.DTOs;
 using RotinaXP.API.Models;
+using RotinaXP.API.Application.Interfaces.Services;
+using RotinaXP.API.Security;
 namespace RotinaXP.API.Services;
-public class UserService
+
+public class UserService : IUserService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public UserService(ApplicationDbContext context)
+    public UserService(ApplicationDbContext context, IPasswordHasher passwordHasher)
     {
         _context = context;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<List<User>> GetAllAsync()
@@ -303,12 +308,12 @@ public class UserService
 
     private string HashPassword(string password)
     {
-        return BCrypt.Net.BCrypt.HashPassword(password);
+        return _passwordHasher.Hash(password);
     }
 
     private bool VerifyPassword(string password, string hash)
     {
-        return BCrypt.Net.BCrypt.Verify(password, hash);
+        return _passwordHasher.Verify(password, hash);
     }
 
     private static bool IsUniqueConstraintViolation(DbUpdateException ex)
