@@ -2,33 +2,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RotinaXP.API.Extensions;
 using RotinaXP.API.DTOs;
-using RotinaXP.API.Application.Interfaces.Services;
-using RotinaXP.API.Features.Users.UseCases;
+using RotinaXP.API.Services;
 namespace RotinaXP.API.Controllers;
-
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
-    private readonly IUserService _service;
-    private readonly GetUsersPageUseCase _getUsersPage;
-    private readonly GetUserByIdUseCase _getUserById;
-    private readonly UpdateUserUseCase _updateUser;
-    private readonly DeleteUserUseCase _deleteUser;
+    private readonly UserService _service;
     private const string DuplicateEmailMessage = "Email is already registered in the system";
 
-    public UsersController(
-        IUserService service,
-        GetUsersPageUseCase getUsersPage,
-        GetUserByIdUseCase getUserById,
-        UpdateUserUseCase updateUser,
-        DeleteUserUseCase deleteUser)
+    public UsersController(UserService service)
     {
         _service = service;
-        _getUsersPage = getUsersPage;
-        _getUserById = getUserById;
-        _updateUser = updateUser;
-        _deleteUser = deleteUser;
     }
 
     [HttpGet]
@@ -40,7 +25,25 @@ public class UsersController : ControllerBase
         var authenticatedUserId = User.GetAuthenticatedUserId();
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
-        var response = await _getUsersPage.ExecuteAsync(authenticatedUserId.Value, page, pageSize);
+
+        var currentUser = await _service.GetUserByIdAsync(authenticatedUserId.Value);
+        if (currentUser == null)
+            return NotFound(new { message = "User not found" });
+
+        var (normalizedPage, normalizedPageSize) = NormalizePagination(page, pageSize);
+        var hasCurrentUserOnPage = normalizedPage == PaginationDefaults.DefaultPage;
+
+        var response = new PagedResult<UserDTO>
+        {
+            Page = normalizedPage,
+            PageSize = normalizedPageSize,
+            TotalItems = 1,
+            TotalPages = 1,
+            HasNext = false,
+            HasPrevious = false,
+            Items = hasCurrentUserOnPage ? [currentUser] : []
+        };
+
         return Ok(response);
     }
 
@@ -52,7 +55,8 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetById(int id)
     {
-        var user = await _getUserById.ExecuteAsync(id);
+        var user = await _service.GetUserByIdAsync(id);
+
         if (user == null)
             return NotFound(new { message = "User not found" });
 
@@ -95,7 +99,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
     {
-        var result = await _updateUser.ExecuteAsync(id, request);
+        var result = await _service.UpdateAsync(id, request);
         if (!result.Success)
         {
             if (result.Message == "User not found")
@@ -125,10 +129,23 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _deleteUser.ExecuteAsync(id);
+        var result = await _service.DeleteAsync(id);
         if (!result.Success)
             return NotFound(new { message = result.Message });
 
         return NoContent();
+    }
+
+    private static (int Page, int PageSize) NormalizePagination(int page, int pageSize)
+    {
+        var normalizedPage = page < PaginationDefaults.DefaultPage
+            ? PaginationDefaults.DefaultPage
+            : page;
+
+        var normalizedPageSize = pageSize < 1
+            ? PaginationDefaults.DefaultPageSize
+            : Math.Min(pageSize, PaginationDefaults.MaxPageSize);
+
+        return (normalizedPage, normalizedPageSize);
     }
 }
