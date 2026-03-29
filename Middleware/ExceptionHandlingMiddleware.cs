@@ -22,7 +22,11 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception for request {Path}", context.Request.Path);
+            _logger.LogError(
+                ex,
+                "Unhandled exception for request {Path} with correlation id {CorrelationId}",
+                context.Request.Path,
+                context.TraceIdentifier);
 
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/problem+json";
@@ -36,6 +40,7 @@ public class ExceptionHandlingMiddleware
                 Instance = context.Request.Path
             };
             problem.Extensions["traceId"] = context.TraceIdentifier;
+            problem.Extensions["correlationId"] = context.TraceIdentifier;
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
         }

@@ -275,3 +275,16 @@ D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.
 D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
 D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Google.Protobuf.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Grpc.Core.Api.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Grpc.Net.Client.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\Grpc.Net.Common.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.Api.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.Api.ProviderBuilderExtensions.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.Exporter.OpenTelemetryProtocol.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.Extensions.Hosting.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.Instrumentation.AspNetCore.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.Instrumentation.EntityFrameworkCore.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.Instrumentation.Http.dll
+D:\Luizx\Program\RotinaXP\RotinaXP.API\bin\Debug\net9.0\OpenTelemetry.Instrumentation.Runtime.dll
