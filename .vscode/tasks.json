@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build: solution",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "RotinaXP.API.sln"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "run: webapi",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "src/WebApi/RotinaXP.API.csproj"
+      ],
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "test: solution",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "RotinaXP.API.sln"
+      ],
+      "group": "test",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "db: update",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "ef",
+        "database",
+        "update",
+        "--project",
+        "src/Infrastructure/RotinaXP.API.Infrastructure/RotinaXP.API.Infrastructure.csproj",
+        "--startup-project",
+        "src/WebApi/RotinaXP.API.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

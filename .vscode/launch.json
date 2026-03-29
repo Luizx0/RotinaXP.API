@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Launch WebApi",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build: solution",
+      "program": "${workspaceFolder}/src/WebApi/bin/Debug/net9.0/RotinaXP.API.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/WebApi",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      }
+    }
+  ]
+}
