@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using RotinaXP.API.DTOs;
+using RotinaXP.API.Application.Interfaces.Services;
 using RotinaXP.API.Services;
 
 namespace RotinaXP.API.Controllers;
@@ -8,11 +9,11 @@ namespace RotinaXP.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserService _service;
+    private readonly IUserService _service;
     private readonly JwtTokenService _jwtTokenService;
     private const string DuplicateEmailMessage = "Email is already registered in the system";
 
-    public AuthController(UserService service, JwtTokenService jwtTokenService)
+    public AuthController(IUserService service, JwtTokenService jwtTokenService)
     {
         _service = service;
         _jwtTokenService = jwtTokenService;

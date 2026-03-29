@@ -2,10 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using RotinaXP.API.Data;
 using RotinaXP.API.DTOs;
 using RotinaXP.API.Models;
+using RotinaXP.API.Application.Interfaces.Services;
 
 namespace RotinaXP.API.Services;
 
-public class DailyProgressService
+public class DailyProgressService : IDailyProgressService
 {
     private readonly ApplicationDbContext _context;
 

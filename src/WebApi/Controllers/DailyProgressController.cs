@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RotinaXP.API.DTOs;
 using RotinaXP.API.Extensions;
-using RotinaXP.API.Services;
+using RotinaXP.API.Features.DailyProgress.UseCases;
 
 namespace RotinaXP.API.Controllers;
 
@@ -11,11 +11,15 @@ namespace RotinaXP.API.Controllers;
 [Authorize]
 public class DailyProgressController : ControllerBase
 {
-    private readonly DailyProgressService _service;
+    private readonly GetDailyProgressPageUseCase _getDailyProgressPageUseCase;
+    private readonly GetDailyProgressByIdUseCase _getDailyProgressByIdUseCase;
 
-    public DailyProgressController(DailyProgressService service)
+    public DailyProgressController(
+        GetDailyProgressPageUseCase getDailyProgressPageUseCase,
+        GetDailyProgressByIdUseCase getDailyProgressByIdUseCase)
     {
-        _service = service;
+        _getDailyProgressPageUseCase = getDailyProgressPageUseCase;
+        _getDailyProgressByIdUseCase = getDailyProgressByIdUseCase;
     }
 
     [HttpGet]
@@ -27,7 +31,7 @@ public class DailyProgressController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var response = await _service.GetByUserPagedAsync(authenticatedUserId.Value, page, pageSize);
+        var response = await _getDailyProgressPageUseCase.ExecuteAsync(authenticatedUserId.Value, page, pageSize);
         return Ok(response);
     }
 
@@ -41,7 +45,7 @@ public class DailyProgressController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var progress = await _service.GetDailyProgressDtoByIdForUserAsync(id, authenticatedUserId.Value);
+        var progress = await _getDailyProgressByIdUseCase.ExecuteAsync(id, authenticatedUserId.Value);
         if (progress == null)
             return NotFound(new { message = "Daily progress not found" });
 
@@ -56,7 +60,7 @@ public class DailyProgressController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetByUser(int userId, [FromQuery] int page = PaginationDefaults.DefaultPage, [FromQuery] int pageSize = PaginationDefaults.DefaultPageSize)
     {
-        var response = await _service.GetByUserPagedAsync(userId, page, pageSize);
+        var response = await _getDailyProgressPageUseCase.ExecuteAsync(userId, page, pageSize);
         return Ok(response);
     }
 }
