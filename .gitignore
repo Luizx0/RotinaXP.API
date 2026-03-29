@@ -20,7 +20,13 @@ _ReSharper*/
 *.[Rr]e[Ss]harper
 
 # VS Code
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Planning private notes
+Planejamento - RotinaXP API/Notas Privadas.md
 
 # OS files
 .DS_Store

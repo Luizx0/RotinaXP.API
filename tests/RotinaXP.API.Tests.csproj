@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\WebApi\RotinaXP.API.csproj" />
+    <ProjectReference Include="..\src\WebApi\RotinaXP.API.csproj" />
   </ItemGroup>
 
 </Project>
