@@ -15,6 +15,8 @@ using System.Text;
 using System.Threading.RateLimiting;
 using RotinaXP.API.Data;
 using RotinaXP.API.Authorization;
+using RotinaXP.API.Features.Rewards.UseCases;
+using RotinaXP.API.Features.Tasks.UseCases;
 using RotinaXP.API.Middleware;
 using RotinaXP.API.Services;
 
@@ -113,6 +115,17 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TaskService>();
 builder.Services.AddScoped<RewardService>();
 builder.Services.AddScoped<DailyProgressService>();
+builder.Services.AddScoped<GetTasksPageUseCase>();
+builder.Services.AddScoped<GetTaskByIdUseCase>();
+builder.Services.AddScoped<CreateTaskUseCase>();
+builder.Services.AddScoped<UpdateTaskUseCase>();
+builder.Services.AddScoped<DeleteTaskUseCase>();
+builder.Services.AddScoped<GetRewardsPageUseCase>();
+builder.Services.AddScoped<GetRewardByIdUseCase>();
+builder.Services.AddScoped<CreateRewardUseCase>();
+builder.Services.AddScoped<UpdateRewardUseCase>();
+builder.Services.AddScoped<DeleteRewardUseCase>();
+builder.Services.AddScoped<RedeemRewardUseCase>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddSingleton<IAuthorizationHandler, ResourceOwnerHandler>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

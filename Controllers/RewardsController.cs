@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RotinaXP.API.DTOs;
 using RotinaXP.API.Extensions;
-using RotinaXP.API.Models;
+using RotinaXP.API.Features.Rewards.UseCases;
 using RotinaXP.API.Services;
 
 namespace RotinaXP.API.Controllers;
@@ -12,11 +12,27 @@ namespace RotinaXP.API.Controllers;
 [Authorize]
 public class RewardsController : ControllerBase
 {
-    private readonly RewardService _service;
+    private readonly GetRewardsPageUseCase _getRewardsPageUseCase;
+    private readonly GetRewardByIdUseCase _getRewardByIdUseCase;
+    private readonly CreateRewardUseCase _createRewardUseCase;
+    private readonly UpdateRewardUseCase _updateRewardUseCase;
+    private readonly DeleteRewardUseCase _deleteRewardUseCase;
+    private readonly RedeemRewardUseCase _redeemRewardUseCase;
 
-    public RewardsController(RewardService service)
+    public RewardsController(
+        GetRewardsPageUseCase getRewardsPageUseCase,
+        GetRewardByIdUseCase getRewardByIdUseCase,
+        CreateRewardUseCase createRewardUseCase,
+        UpdateRewardUseCase updateRewardUseCase,
+        DeleteRewardUseCase deleteRewardUseCase,
+        RedeemRewardUseCase redeemRewardUseCase)
     {
-        _service = service;
+        _getRewardsPageUseCase = getRewardsPageUseCase;
+        _getRewardByIdUseCase = getRewardByIdUseCase;
+        _createRewardUseCase = createRewardUseCase;
+        _updateRewardUseCase = updateRewardUseCase;
+        _deleteRewardUseCase = deleteRewardUseCase;
+        _redeemRewardUseCase = redeemRewardUseCase;
     }
 
     [HttpGet]
@@ -28,7 +44,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var response = await _service.GetByUserPagedAsync(authenticatedUserId.Value, page, pageSize);
+        var response = await _getRewardsPageUseCase.ExecuteAsync(authenticatedUserId.Value, page, pageSize);
         return Ok(response);
     }
 
@@ -42,7 +58,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var reward = await _service.GetRewardDtoByIdForUserAsync(id, authenticatedUserId.Value);
+        var reward = await _getRewardByIdUseCase.ExecuteAsync(id, authenticatedUserId.Value);
         if (reward == null)
             return NotFound(new { message = "Reward not found" });
 
@@ -57,7 +73,7 @@ public class RewardsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetByUser(int userId, [FromQuery] int page = PaginationDefaults.DefaultPage, [FromQuery] int pageSize = PaginationDefaults.DefaultPageSize)
     {
-        var response = await _service.GetByUserPagedAsync(userId, page, pageSize);
+        var response = await _getRewardsPageUseCase.ExecuteAsync(userId, page, pageSize);
         return Ok(response);
     }
 
@@ -72,26 +88,19 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        if (string.IsNullOrWhiteSpace(request.Title))
-            return BadRequest(new { message = "Title is required" });
+        var result = await _createRewardUseCase.ExecuteAsync(request, authenticatedUserId.Value);
+        if (!result.Success)
+        {
+            if (result.Message == "Forbidden")
+                return Forbid();
 
-        if (request.PointsCost <= 0)
-            return BadRequest(new { message = "PointsCost must be greater than zero" });
+            return BadRequest(new { message = result.Message });
+        }
 
-        if (request.UserId != authenticatedUserId.Value)
+        if (result.Reward == null)
             return Forbid();
 
-        var reward = new Reward
-        {
-            Title = request.Title,
-            PointsCost = request.PointsCost,
-            UserId = authenticatedUserId.Value
-        };
-
-        await _service.CreateAsync(reward);
-
-        var createdReward = await _service.GetRewardDtoByIdForUserAsync(reward.Id, authenticatedUserId.Value);
-        return CreatedAtAction(nameof(GetById), new { id = reward.Id }, createdReward);
+        return CreatedAtAction(nameof(GetById), new { id = result.Reward.Id }, result.Reward);
     }
 
     [HttpPut("{id}")]
@@ -105,22 +114,14 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var reward = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
-        if (reward == null)
-            return NotFound(new { message = "Reward not found" });
-
-        if (!string.IsNullOrWhiteSpace(request.Title))
-            reward.Title = request.Title;
-
-        if (request.PointsCost.HasValue)
+        var result = await _updateRewardUseCase.ExecuteAsync(id, authenticatedUserId.Value, request);
+        if (!result.Success)
         {
-            if (request.PointsCost <= 0)
-                return BadRequest(new { message = "PointsCost must be greater than zero" });
+            if (result.Message == "Reward not found")
+                return NotFound(new { message = result.Message });
 
-            reward.PointsCost = request.PointsCost.Value;
+            return BadRequest(new { message = result.Message });
         }
-
-        await _service.UpdateAsync(reward);
 
         return NoContent();
     }
@@ -135,11 +136,9 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var reward = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
-        if (reward == null)
+        var result = await _deleteRewardUseCase.ExecuteAsync(id, authenticatedUserId.Value);
+        if (!result.Success)
             return NotFound(new { message = "Reward not found" });
-
-        await _service.DeleteAsync(reward);
 
         return NoContent();
     }
@@ -155,7 +154,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var result = await _service.RedeemAsync(id, authenticatedUserId.Value);
+        var result = await _redeemRewardUseCase.ExecuteAsync(id, authenticatedUserId.Value);
         if (!result.Success)
         {
             if (result.Message is "Reward not found" or "User not found")
