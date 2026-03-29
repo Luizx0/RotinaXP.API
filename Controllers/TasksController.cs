@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RotinaXP.API.DTOs;
+using RotinaXP.API.Extensions;
 using RotinaXP.API.Models;
 using RotinaXP.API.Services;
 namespace RotinaXP.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TasksController : ControllerBase
 {
     private readonly TaskService _service;
@@ -16,9 +19,14 @@ public class TasksController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(List<TaskDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAll()
     {
-        var tasks = await _service.GetAllAsync();
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var tasks = await _service.GetByUserAsync(authenticatedUserId.Value);
         var response = tasks.Select(ToDto).ToList();
 
         return Ok(response);
@@ -27,9 +35,14 @@ public class TasksController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(TaskDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetById(int id)
     {
-        var task = await _service.GetByIdAsync(id);
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var task = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
 
         if (task == null)
             return NotFound(new { message = "Task not found" });
@@ -38,14 +51,13 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet("user/{userId}")]
+    [Authorize(Policy = "ResourceOwner")]
     [ProducesResponseType(typeof(List<TaskDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetByUser(int userId)
     {
-        var userExists = await _service.UserExistsAsync(userId);
-        if (!userExists)
-            return NotFound(new { message = "User not found" });
-
         var tasks = await _service.GetByUserAsync(userId);
         var response = tasks.Select(ToDto).ToList();
 
@@ -55,20 +67,25 @@ public class TasksController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(TaskDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] CreateTaskDto request)
     {
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
         if (string.IsNullOrWhiteSpace(request.Title))
             return BadRequest(new { message = "Title is required" });
 
-        var userExists = await _service.UserExistsAsync(request.UserId);
-        if (!userExists)
-            return BadRequest(new { message = "UserId not found" });
+        if (request.UserId != authenticatedUserId.Value)
+            return Forbid();
 
         var task = new TaskItem
         {
             Title = request.Title,
             IsCompleted = request.IsCompleted,
-            UserId = request.UserId
+            UserId = authenticatedUserId.Value
         };
 
         await _service.CreateAsync(task);
@@ -81,9 +98,14 @@ public class TasksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto request)
     {
-        var result = await _service.UpdateWithGamificationAsync(id, request.Title, request.IsCompleted);
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var result = await _service.UpdateWithGamificationAsync(id, authenticatedUserId.Value, request.Title, request.IsCompleted);
         if (!result.Success)
         {
             if (result.Message == "Task not found")
@@ -105,9 +127,14 @@ public class TasksController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id)
     {
-        var task = await _service.GetByIdAsync(id);
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var task = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
         if (task == null)
             return NotFound(new { message = "Task not found" });
 

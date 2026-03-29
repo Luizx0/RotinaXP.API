@@ -28,6 +28,12 @@ public class TaskService
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    public async Task<TaskItem?> GetByIdForUserAsync(int id, int userId)
+    {
+        return await _context.Tasks
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+    }
+
     public async Task<List<TaskItem>> GetByUserAsync(int userId)
     {
         return await _context.Tasks
@@ -62,11 +68,12 @@ public class TaskService
 
     public async Task<(bool Success, string Message, bool PointsAwarded)> UpdateWithGamificationAsync(
         int taskId,
+        int userId,
         string? title,
         bool? isCompleted)
     {
         var task = await _context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == taskId);
+            .FirstOrDefaultAsync(t => t.Id == taskId && t.UserId == userId);
 
         if (task == null)
             return (false, "Task not found", false);

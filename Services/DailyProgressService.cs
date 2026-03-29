@@ -28,6 +28,13 @@ public class DailyProgressService
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
+    public async Task<DailyProgress?> GetByIdForUserAsync(int id, int userId)
+    {
+        return await _context.DailyProgresses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+    }
+
     public async Task<List<DailyProgress>> GetByUserAsync(int userId)
     {
         return await _context.DailyProgresses

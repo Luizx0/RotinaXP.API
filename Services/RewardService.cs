@@ -27,6 +27,12 @@ public class RewardService
             .FirstOrDefaultAsync(r => r.Id == id);
     }
 
+    public async Task<Reward?> GetByIdForUserAsync(int id, int userId)
+    {
+        return await _context.Rewards
+            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
+    }
+
     public async Task<List<Reward>> GetByUserAsync(int userId)
     {
         return await _context.Rewards
@@ -59,9 +65,9 @@ public class RewardService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<(bool Success, string Message, int PointsRemaining)> RedeemAsync(int rewardId)
+    public async Task<(bool Success, string Message, int PointsRemaining)> RedeemAsync(int rewardId, int userId)
     {
-        var reward = await _context.Rewards.FirstOrDefaultAsync(r => r.Id == rewardId);
+        var reward = await _context.Rewards.FirstOrDefaultAsync(r => r.Id == rewardId && r.UserId == userId);
         if (reward == null)
             return (false, "Reward not found", 0);
 

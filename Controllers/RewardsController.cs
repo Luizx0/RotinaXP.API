@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RotinaXP.API.DTOs;
+using RotinaXP.API.Extensions;
 using RotinaXP.API.Models;
 using RotinaXP.API.Services;
 
@@ -7,6 +9,7 @@ namespace RotinaXP.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class RewardsController : ControllerBase
 {
     private readonly RewardService _service;
@@ -18,9 +21,14 @@ public class RewardsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(List<RewardDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAll()
     {
-        var rewards = await _service.GetAllAsync();
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var rewards = await _service.GetByUserAsync(authenticatedUserId.Value);
         var response = rewards.Select(ToDto).ToList();
         return Ok(response);
     }
@@ -28,9 +36,14 @@ public class RewardsController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(RewardDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetById(int id)
     {
-        var reward = await _service.GetByIdAsync(id);
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var reward = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
         if (reward == null)
             return NotFound(new { message = "Reward not found" });
 
@@ -38,14 +51,13 @@ public class RewardsController : ControllerBase
     }
 
     [HttpGet("user/{userId}")]
+    [Authorize(Policy = "ResourceOwner")]
     [ProducesResponseType(typeof(List<RewardDTO>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetByUser(int userId)
     {
-        var userExists = await _service.UserExistsAsync(userId);
-        if (!userExists)
-            return NotFound(new { message = "User not found" });
-
         var rewards = await _service.GetByUserAsync(userId);
         var response = rewards.Select(ToDto).ToList();
         return Ok(response);
@@ -54,23 +66,28 @@ public class RewardsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(RewardDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] CreateRewardDto request)
     {
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
         if (string.IsNullOrWhiteSpace(request.Title))
             return BadRequest(new { message = "Title is required" });
 
         if (request.PointsCost <= 0)
             return BadRequest(new { message = "PointsCost must be greater than zero" });
 
-        var userExists = await _service.UserExistsAsync(request.UserId);
-        if (!userExists)
-            return BadRequest(new { message = "UserId not found" });
+        if (request.UserId != authenticatedUserId.Value)
+            return Forbid();
 
         var reward = new Reward
         {
             Title = request.Title,
             PointsCost = request.PointsCost,
-            UserId = request.UserId
+            UserId = authenticatedUserId.Value
         };
 
         await _service.CreateAsync(reward);
@@ -82,9 +99,14 @@ public class RewardsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRewardDto request)
     {
-        var reward = await _service.GetByIdAsync(id);
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var reward = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
         if (reward == null)
             return NotFound(new { message = "Reward not found" });
 
@@ -107,9 +129,14 @@ public class RewardsController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id)
     {
-        var reward = await _service.GetByIdAsync(id);
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var reward = await _service.GetByIdForUserAsync(id, authenticatedUserId.Value);
         if (reward == null)
             return NotFound(new { message = "Reward not found" });
 
@@ -122,9 +149,14 @@ public class RewardsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Redeem(int id)
     {
-        var result = await _service.RedeemAsync(id);
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var result = await _service.RedeemAsync(id, authenticatedUserId.Value);
         if (!result.Success)
         {
             if (result.Message is "Reward not found" or "User not found")

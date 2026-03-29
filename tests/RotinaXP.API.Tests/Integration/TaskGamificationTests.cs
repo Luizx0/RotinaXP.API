@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -28,6 +29,9 @@ public class TaskGamificationTests : IClassFixture<CustomWebApplicationFactory>
 
         var registerJson = await registerResponse.Content.ReadFromJsonAsync<JsonElement>();
         var userId = registerJson.GetProperty("user").GetProperty("id").GetInt32();
+        var token = registerJson.GetProperty("token").GetString();
+
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var createTaskPayload = new
         {

@@ -24,6 +24,7 @@ public class LoginResponse
 {
     public string Message { get; set; } = string.Empty;
     public UserDTO User { get; set; } = null!;
+    public string Token { get; set; } = string.Empty;
 }
 public class RegisterRequest
 {

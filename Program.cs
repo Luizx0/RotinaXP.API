@@ -1,8 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using System.Text;
 using RotinaXP.API.Data;
+using RotinaXP.API.Authorization;
 using RotinaXP.API.Middleware;
 using RotinaXP.API.Services;
 
@@ -18,6 +23,16 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 var externalDbPassword = builder.Configuration["Database:Password"]
     ?? Environment.GetEnvironmentVariable("ROTINAXP_DB_PASSWORD");
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "RotinaXP.API";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "RotinaXP.Client";
+var jwtExpiryMinutes = builder.Configuration.GetValue<int?>("Jwt:ExpiryMinutes") ?? 120;
+var jwtSecret = builder.Configuration["Jwt:Key"]
+    ?? Environment.GetEnvironmentVariable("ROTINAXP_JWT_KEY")
+    ?? throw new InvalidOperationException("JWT secret key was not configured.");
+
+if (jwtSecret.Length < 32)
+    throw new InvalidOperationException("JWT secret key must have at least 32 characters.");
 
 if (!string.IsNullOrWhiteSpace(externalDbPassword))
 {
@@ -47,6 +62,31 @@ builder.Services.AddSwaggerGen(options =>
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
         options.IncludeXmlComments(xmlPath);
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Provide a valid JWT token"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -54,6 +94,31 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TaskService>();
 builder.Services.AddScoped<RewardService>();
 builder.Services.AddScoped<DailyProgressService>();
+builder.Services.AddScoped<JwtTokenService>();
+builder.Services.AddSingleton<IAuthorizationHandler, ResourceOwnerHandler>();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ResourceOwner", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new ResourceOwnerRequirement());
+    });
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>("database");
@@ -102,6 +167,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 app.Run();

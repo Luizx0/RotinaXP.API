@@ -35,7 +35,7 @@ public class RewardServiceTests
         await context.SaveChangesAsync();
 
         var service = new RewardService(context);
-        var result = await service.RedeemAsync(reward.Id);
+        var result = await service.RedeemAsync(reward.Id, user.Id);
 
         Assert.True(result.Success);
         Assert.Equal(30, result.PointsRemaining);

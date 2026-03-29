@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RotinaXP.API.Extensions;
 using RotinaXP.API.DTOs;
 using RotinaXP.API.Services;
 namespace RotinaXP.API.Controllers;
@@ -15,17 +17,30 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     [ProducesResponseType(typeof(List<UserDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _service.GetAllUsersAsync();
+        var authenticatedUserId = User.GetAuthenticatedUserId();
+        if (!authenticatedUserId.HasValue)
+            return Unauthorized();
+
+        var currentUser = await _service.GetUserByIdAsync(authenticatedUserId.Value);
+        if (currentUser == null)
+            return NotFound(new { message = "User not found" });
+
+        var users = new List<UserDTO> { currentUser };
 
         return Ok(users);
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = "ResourceOwner")]
     [ProducesResponseType(typeof(UserDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetById(int id)
     {
         var user = await _service.GetUserByIdAsync(id);
@@ -37,6 +52,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(UserDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -62,10 +78,13 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "ResourceOwner")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
     {
         var result = await _service.UpdateAsync(id, request);
@@ -91,8 +110,11 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "ResourceOwner")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _service.DeleteAsync(id);

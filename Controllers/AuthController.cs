@@ -9,11 +9,13 @@ namespace RotinaXP.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly UserService _service;
+    private readonly JwtTokenService _jwtTokenService;
     private const string DuplicateEmailMessage = "Email is already registered in the system";
 
-    public AuthController(UserService service)
+    public AuthController(UserService service, JwtTokenService jwtTokenService)
     {
         _service = service;
+        _jwtTokenService = jwtTokenService;
     }
 
     [HttpPost("register")]
@@ -42,7 +44,8 @@ public class AuthController : ControllerBase
         var response = new LoginResponse
         {
             Message = result.Message,
-            User = result.User
+            User = result.User,
+            Token = _jwtTokenService.GenerateToken(result.User)
         };
 
         return Created($"/api/users/{result.User.Id}", response);
@@ -67,7 +70,8 @@ public class AuthController : ControllerBase
         var response = new LoginResponse
         {
             Message = result.Message,
-            User = result.User
+            User = result.User,
+            Token = _jwtTokenService.GenerateToken(result.User)
         };
 
         return Ok(response);

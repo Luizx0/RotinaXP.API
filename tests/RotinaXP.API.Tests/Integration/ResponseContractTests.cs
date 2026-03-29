@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -49,7 +50,8 @@ public class ResponseContractTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task UsersEndpoint_DoesNotExposePasswordHash()
     {
-        var userId = await RegisterUserAsync($"contract-users-{Guid.NewGuid():N}@example.com");
+        var (userId, token) = await RegisterUserAsync($"contract-users-{Guid.NewGuid():N}@example.com");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await _client.GetAsync($"/api/users/{userId}");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -61,7 +63,8 @@ public class ResponseContractTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task TasksResponses_DoNotExposeUserNavigation()
     {
-        var userId = await RegisterUserAsync($"contract-tasks-{Guid.NewGuid():N}@example.com");
+        var (userId, token) = await RegisterUserAsync($"contract-tasks-{Guid.NewGuid():N}@example.com");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var createResponse = await _client.PostAsJsonAsync("/api/tasks", new
         {
@@ -87,7 +90,8 @@ public class ResponseContractTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task RewardsAndDailyProgressResponses_DoNotExposeUserNavigation()
     {
-        var userId = await RegisterUserAsync($"contract-rewards-{Guid.NewGuid():N}@example.com");
+        var (userId, token) = await RegisterUserAsync($"contract-rewards-{Guid.NewGuid():N}@example.com");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var createRewardResponse = await _client.PostAsJsonAsync("/api/rewards", new
         {
@@ -129,7 +133,7 @@ public class ResponseContractTests : IClassFixture<CustomWebApplicationFactory>
         Assert.False(progressJson[0].TryGetProperty("user", out _));
     }
 
-    private async Task<int> RegisterUserAsync(string email)
+    private async Task<(int UserId, string Token)> RegisterUserAsync(string email)
     {
         var response = await _client.PostAsJsonAsync("/api/auth/register", new
         {
@@ -141,6 +145,8 @@ public class ResponseContractTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        return json.GetProperty("user").GetProperty("id").GetInt32();
+        return (
+            json.GetProperty("user").GetProperty("id").GetInt32(),
+            json.GetProperty("token").GetString() ?? string.Empty);
     }
 }
