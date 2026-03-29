@@ -30,10 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="tests\**\*.cs" />
-    <Content Remove="tests\**\*" />
-    <EmbeddedResource Remove="tests\**\*" />
-    <None Remove="tests\**\*" />
+    <Compile Remove="tests\**\*.cs;**\obj\**\*.cs;**\bin\**\*.cs" />
+    <Content Remove="tests\**\*;**\obj\**\*;**\bin\**\*" />
+    <EmbeddedResource Remove="tests\**\*;**\obj\**\*;**\bin\**\*" />
+    <None Remove="tests\**\*;**\obj\**\*;**\bin\**\*" />
   </ItemGroup>
 
 </Project>
