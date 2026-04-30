@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using RotinaXP.API.Extensions;
 using RotinaXP.API.Options;
+using RotinaXP.API.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,7 +104,7 @@ using (var scope = app.Services.CreateScope())
     if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
     {
         var db = scope.ServiceProvider.GetRequiredService<RotinaXP.API.Data.ApplicationDbContext>();
-        var hasher = scope.ServiceProvider.GetRequiredService<RotinaXP.API.Application.Interfaces.Services.IPasswordHasher>();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
         var exists = db.Users.Any(u => u.Email == adminEmail);
         if (!exists)
