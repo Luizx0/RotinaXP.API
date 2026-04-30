@@ -25,6 +25,7 @@ using RotinaXP.API.Options;
 using RotinaXP.API.Security;
 using RotinaXP.API.Services;
 
+
 namespace RotinaXP.API.Extensions;
 
 public static class ServiceCollectionExtensions

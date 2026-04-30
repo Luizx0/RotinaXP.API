@@ -2,16 +2,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RotinaXP.API.Extensions;
 using RotinaXP.API.DTOs;
-using RotinaXP.API.Services;
+using RotinaXP.API.Application.Interfaces.Services;
 namespace RotinaXP.API.Controllers;
+
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
-    private readonly UserService _service;
+    private readonly IUserService _service;
     private const string DuplicateEmailMessage = "Email is already registered in the system";
 
-    public UsersController(UserService service)
+    public UsersController(IUserService service)
     {
         _service = service;
     }
