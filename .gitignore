@@ -44,3 +44,7 @@ publish/
 
 # Dotnet local tools cache (optional)
 .dotnet/
+
+# Markdown files
+ISSUE_IBGE_ADMIN.md
+FRONTEND_ADMIN_IBGE.md
