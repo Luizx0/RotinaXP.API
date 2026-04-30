@@ -1,6 +1,6 @@
 # Frontend: Admin Area & IBGE Integration (Implementação)
 
-Objetivo: instruir como adaptar o frontend (CLI ou SPA) para separar funcionalidades entre `user` e `admin`, e criar a tela/rota exclusiva de admin que consome os endpoints do backend para mostrar dados do IBGE.
+Objetivo: instruir como adaptar o frontend (CLI ou SPA) para separar funcionalidades entre `user` e `admin`, e criar a tela/rota exclusiva de admin que consome os endpoints do backend para mostrar dados do IBGE por meio da ligacao do backend e frontend com o AXIOS.
 
 1. Autenticação e autorização
 

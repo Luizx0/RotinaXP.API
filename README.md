@@ -2,10 +2,6 @@
 
 RotinaXP é uma aplicação para organização da rotina de estudos com backend em .NET (API) e cliente CLI.
 
-## Entrega Intermediária: IBGE Education Admin
-
-Esta entrega adiciona uma área exclusiva para administradores que consome dados do IBGE e exibe indicadores educacionais.
-
 Principais arquivos adicionados:
 
 - `src/Infrastructure/RotinaXP.API.Infrastructure/Clients/IbgeClient.cs`
