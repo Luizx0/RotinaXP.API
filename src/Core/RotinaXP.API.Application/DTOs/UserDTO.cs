@@ -6,6 +6,7 @@ public class UserDTO
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = "User";
     public int Points { get; set; }
 }
 public class LoginRequest

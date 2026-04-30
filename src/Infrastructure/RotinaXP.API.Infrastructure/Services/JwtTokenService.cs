@@ -26,7 +26,7 @@ public class JwtTokenService
 
     public string GenerateToken(UserDTO user)
     {
-        var claims = new[]
+        var claimsList = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -34,13 +34,18 @@ public class JwtTokenService
             new Claim(ClaimTypes.Name, user.Name)
         };
 
+        if (!string.IsNullOrWhiteSpace(user.Role))
+        {
+            claimsList.Add(new Claim(ClaimTypes.Role, user.Role));
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
             issuer: _issuer,
             audience: _audience,
-            claims: claims,
+            claims: claimsList,
             expires: DateTime.UtcNow.AddMinutes(_expiryMinutes),
             signingCredentials: credentials);
 

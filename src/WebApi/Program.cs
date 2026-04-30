@@ -93,6 +93,36 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 var app = builder.Build();
 
+// Seed an admin user if configured via environment variables (development convenience)
+using (var scope = app.Services.CreateScope())
+{
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var adminEmail = configuration["ROTINAXP_ADMIN_EMAIL"] ?? configuration["Admin:Email"];
+    var adminPassword = configuration["ROTINAXP_ADMIN_PASSWORD"] ?? configuration["Admin:Password"];
+
+    if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
+    {
+        var db = scope.ServiceProvider.GetRequiredService<RotinaXP.API.Data.ApplicationDbContext>();
+        var hasher = scope.ServiceProvider.GetRequiredService<RotinaXP.API.Application.Interfaces.Services.IPasswordHasher>();
+
+        var exists = db.Users.Any(u => u.Email == adminEmail);
+        if (!exists)
+        {
+            var user = new RotinaXP.API.Models.User
+            {
+                Name = "Admin",
+                Email = adminEmail,
+                PasswordHash = hasher.Hash(adminPassword),
+                Points = 0,
+                Role = "Admin"
+            };
+
+            db.Users.Add(user);
+            db.SaveChanges();
+        }
+    }
+}
+
 app.UseRotinaXpDevelopmentTools();
 app.UseRotinaXpPipeline();
 app.MapControllers();

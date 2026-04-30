@@ -177,6 +177,9 @@ public static class ServiceCollectionExtensions
                     Array.Empty<string>()
                 }
             });
+
+            // Add admin operation filter to annotate admin endpoints and allow dev header
+            options.OperationFilter<RotinaXP.API.WebSwagger.AdminOperationFilter>();
         });
 
         return services;
