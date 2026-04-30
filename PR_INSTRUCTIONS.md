@@ -36,10 +36,12 @@ This PR implements the IBGE integration for the Admin area. It adds:
 Closes: Closes #<issue-number>
 
 Checklist (use PR tasks):
+
 - [ ] Code review
 - [ ] CI green
 - [ ] Merge to `entrega-intermediaria`
 
 Notes:
+
 - After merge to `entrega-intermediaria`, open a PR to `main` when ready.
 - Use the `PR_ENTREGA_INTERMEDIARIA.md` file as a more detailed reference if needed.
