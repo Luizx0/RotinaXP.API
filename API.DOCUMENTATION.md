@@ -33,6 +33,7 @@ dotnet ef database update --project src/Infrastructure/RotinaXP.API.Infrastructu
 dotnet run --project src/WebApi/RotinaXP.API.csproj
 
 A API sobe em:
+
 - HTTP: http://localhost:5252
 - HTTPS: https://localhost:7024
 
@@ -59,19 +60,20 @@ API REST de produtividade gamificada. Usuarios criam tarefas e recompensas. Conc
 
 ## Stack
 
-| Tecnologia | Versao |
-|---|---|
-| .NET / ASP.NET Core | 9 |
-| Entity Framework Core | 9.0.1 |
-| PostgreSQL (Npgsql) | 9.0.4 |
-| JWT Bearer | 9.0.1 |
-| OpenTelemetry | 1.10+ |
-| Swagger | 7.0.0 |
-| xUnit | 2.9.2 |
+| Tecnologia            | Versao |
+| --------------------- | ------ |
+| .NET / ASP.NET Core   | 9      |
+| Entity Framework Core | 9.0.1  |
+| PostgreSQL (Npgsql)   | 9.0.4  |
+| JWT Bearer            | 9.0.1  |
+| OpenTelemetry         | 1.10+  |
+| Swagger               | 7.0.0  |
+| xUnit                 | 2.9.2  |
 
 ## Estrutura Atual da Solucao
 
 src/
+
 - Core/
   - RotinaXP.API.Domain/
     - Entities/
@@ -96,6 +98,7 @@ src/
   - appsettings.json
 
 tests/
+
 - Integration/
 - Unit/
 - RotinaXP.API.Tests.csproj
@@ -156,3 +159,103 @@ tests/
 - Controle de concorrencia otimista com RowVersion.
 - Operacoes criticas com update atomico e transacao.
 - Indices para carga alta e restricao de unicidade no progresso diario.
+
+## Nova Feature: IBGE Education Admin (Área Administrador)
+
+Resumo rápido:
+
+- Objetivo: permitir que administradores consultem dados institucionais e indicadores educacionais do IBGE diretamente pela API e pela CLI.
+- Acesso: somente contas com papel `Admin` (policy `RequireAdmin`).
+
+### Rotas a adicionar (exemplos)
+
+- `GET /admin/ibge/estados` — retorna lista de estados (id, sigla, nome)
+- `GET /admin/ibge/indicadores` — parâmetros: `indicadorId`, `ano`, `uf` (opcional)
+
+### Arquitetura proposta
+
+- `RotinaXP.API.Infrastructure/Clients/IbgeClient.cs` — realiza chamadas HTTP ao IBGE.
+- `RotinaXP.API.Application/Interfaces/IIbgeService.cs` — contrato de serviço.
+- `RotinaXP.API.Application/Services/IbgeService.cs` — orquestra chamadas e transforma dados.
+- `src/WebApi/Controllers/Admin/IbgeController.cs` — endpoints HTTP protegidos.
+
+### Exemplo de implementação (C# simplificado)
+
+IIbgeService:
+
+```csharp
+public interface IIbgeService {
+  Task<IEnumerable<IbgeStateDto>> GetStatesAsync();
+  Task<IbgeIndicatorDto> GetIndicatorAsync(string indicadorId, int ano, string uf = null);
+}
+```
+
+IbgeClient (esboço):
+
+```csharp
+public class IbgeClient {
+  private readonly HttpClient _http;
+  public IbgeClient(HttpClient http) => _http = http;
+  public async Task<IEnumerable<IbgeStateDto>> GetStatesAsync() {
+    var r = await _http.GetFromJsonAsync<List<IbgeStateDto>>("/api/v1/localidades/estados");
+    return r;
+  }
+}
+```
+
+Controller (esboço):
+
+```csharp
+[Authorize(Policy = "RequireAdmin")]
+[Route("admin/ibge")]
+public class IbgeController : ControllerBase {
+  private readonly IIbgeService _svc;
+  public IbgeController(IIbgeService svc) => _svc = svc;
+  [HttpGet("estados")]
+  public async Task<IActionResult> Estados() => Ok(await _svc.GetStatesAsync());
+}
+```
+
+### Controle de Acesso (prática simples)
+
+- Usar policy `RequireAdmin` configurada em `Program.cs`.
+- Para desenvolvimento local, permitir `X-User-Role: Admin` apenas em `Development` (não recomendado em produção).
+
+### Teste de Integração (exemplo)
+
+- Criar `tests/Integration/IbgeIntegrationTests.cs`.
+- Mockar `HttpMessageHandler` para retornar JSON de `estados` e validar que `IbgeService` mapeia corretamente para `IbgeStateDto`.
+- O teste valida: requisição HTTP, desserialização e regras básicas de normalização.
+
+### CLI
+
+- Comando sugerido: `rotinaxp admin ibge estados` e `rotinaxp admin ibge indicador --id <id> --ano 2021 --uf SP`.
+- CLI deve enviar token JWT com claim `role=Admin` ou usar credencial local para desenvolvimento.
+
+### Boas práticas e observações
+
+- Registrar `IbgeClient` com `AddHttpClient("IBGE", c => c.BaseAddress = new Uri("https://servicodados.ibge.gov.br"));`
+- Tratar timeouts e retry (Polly) para robustez.
+- Mapear apenas campos necessários e não persistir dados sensíveis.
+
+## Issue e Git Flow (resumo)
+
+- Branch: `entrega-intermediaria`
+- Commits pequenos e atômicos: `feat(admin-ibge): add IbgeClient`, `feat(admin-ibge): add service and controller`, `test(integration): add IbgeClient tests`.
+- PR: referenciar a issue e usar `Closes #<n>` para fechar automaticamente.
+
+## Deploy (prático)
+
+- Backend: publicar como container Docker e implantar em Azure App Service ou DigitalOcean App.
+- CLI: empacotar como dotnet tool ou release ZIP/EXE no GitHub Releases.
+
+## Ideias futuras (resumo rápido)
+
+- Dashboards e mapas choropleth por UF/município.
+- Relatórios programados por email para administradores.
+- Integração com INEP para dados escolares por rede.
+- ML para previsão de tendências educacionais.
+
+---
+
+Nota: criei também um guia rápido de execução em `QUICKSTART.md` para rodar a API e executar comandos básicos.

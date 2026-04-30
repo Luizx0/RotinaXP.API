@@ -74,6 +74,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<GetDailyProgressPageUseCase>();
         services.AddScoped<GetDailyProgressByIdUseCase>();
 
+        // IBGE integration
+        services.AddHttpClient<RotinaXP.API.Infrastructure.Clients.IbgeClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://servicodados.ibge.gov.br");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+        services.AddScoped<RotinaXP.API.Application.Interfaces.Services.IIbgeService, RotinaXP.API.Services.IbgeService>();
+
         return services;
     }
 
@@ -104,12 +113,19 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddResourceOwnerAuthorization(this IServiceCollection services)
     {
         services.AddSingleton<IAuthorizationHandler, ResourceOwnerHandler>();
+        services.AddSingleton<IAuthorizationHandler, RotinaXP.API.Authorization.AdminHandler>();
         services.AddAuthorization(options =>
         {
             options.AddPolicy(AppConstants.Policies.ResourceOwner, policy =>
             {
                 policy.RequireAuthenticatedUser();
                 policy.AddRequirements(new ResourceOwnerRequirement());
+            });
+
+            options.AddPolicy("RequireAdmin", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new RotinaXP.API.Authorization.AdminRequirement());
             });
         });
 
