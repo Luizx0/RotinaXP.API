@@ -27,6 +27,9 @@ public class UsersController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
+        if (User.IsInRole("SUPERUSER"))
+            return Ok(await _service.GetAllUsersPagedAsync(page, pageSize));
+
         var currentUser = await _service.GetUserByIdAsync(authenticatedUserId.Value);
         if (currentUser == null)
             return NotFound(new { message = "User not found" });

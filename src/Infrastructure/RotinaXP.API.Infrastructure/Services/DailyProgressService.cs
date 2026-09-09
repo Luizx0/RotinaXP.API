@@ -34,14 +34,14 @@ public class DailyProgressService : IDailyProgressService
     {
         return await _context.DailyProgresses
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+            .FirstOrDefaultAsync(p => p.Id == id && (userId == 0 || p.UserId == userId));
     }
 
     public async Task<List<DailyProgress>> GetByUserAsync(int userId)
     {
         return await _context.DailyProgresses
             .AsNoTracking()
-            .Where(p => p.UserId == userId)
+            .Where(p => userId == 0 || p.UserId == userId)
             .OrderByDescending(p => p.Date)
             .ToListAsync();
     }
@@ -52,7 +52,7 @@ public class DailyProgressService : IDailyProgressService
 
         var query = _context.DailyProgresses
             .AsNoTracking()
-            .Where(p => p.UserId == userId)
+            .Where(p => userId == 0 || p.UserId == userId)
             .OrderByDescending(p => p.Date)
             .ThenByDescending(p => p.Id)
             .Select(p => new DailyProgressDTO
@@ -89,7 +89,7 @@ public class DailyProgressService : IDailyProgressService
     {
         return await _context.DailyProgresses
             .AsNoTracking()
-            .Where(p => p.Id == id && p.UserId == userId)
+            .Where(p => p.Id == id && (userId == 0 || p.UserId == userId))
             .Select(p => new DailyProgressDTO
             {
                 Id = p.Id,

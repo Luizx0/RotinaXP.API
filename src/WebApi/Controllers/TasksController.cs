@@ -39,7 +39,7 @@ public class TasksController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var response = await _getTasksPageUseCase.ExecuteAsync(authenticatedUserId.Value, page, pageSize);
+        var response = await _getTasksPageUseCase.ExecuteAsync(User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value, page, pageSize);
 
         return Ok(response);
     }
@@ -54,7 +54,7 @@ public class TasksController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var task = await _getTaskByIdUseCase.ExecuteAsync(id, authenticatedUserId.Value);
+        var task = await _getTaskByIdUseCase.ExecuteAsync(id, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value);
 
         if (task == null)
             return NotFound(new { message = "Task not found" });
@@ -86,7 +86,7 @@ public class TasksController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var result = await _createTaskUseCase.ExecuteAsync(request, authenticatedUserId.Value);
+        var result = await _createTaskUseCase.ExecuteAsync(request, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value);
         if (!result.Success)
         {
             if (result.Message == "Forbidden")
@@ -113,7 +113,7 @@ public class TasksController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var result = await _updateTaskUseCase.ExecuteAsync(id, authenticatedUserId.Value, request);
+        var result = await _updateTaskUseCase.ExecuteAsync(id, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value, request);
         if (!result.Success)
         {
             if (result.Message == "Task not found")
@@ -142,7 +142,7 @@ public class TasksController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var result = await _deleteTaskUseCase.ExecuteAsync(id, authenticatedUserId.Value);
+        var result = await _deleteTaskUseCase.ExecuteAsync(id, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value);
         if (!result.Success)
             return NotFound(new { message = "Task not found" });
 

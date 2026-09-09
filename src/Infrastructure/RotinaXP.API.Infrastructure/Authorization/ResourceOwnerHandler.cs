@@ -13,6 +13,12 @@ public sealed class ResourceOwnerHandler : AuthorizationHandler<ResourceOwnerReq
         if (context.User.Identity?.IsAuthenticated != true)
             return Task.CompletedTask;
 
+        if (context.User.IsInRole("SUPERUSER"))
+        {
+            context.Succeed(requirement);
+            return Task.CompletedTask;
+        }
+
         if (!TryGetUserIdClaim(context.User, out var claimUserId))
             return Task.CompletedTask;
 

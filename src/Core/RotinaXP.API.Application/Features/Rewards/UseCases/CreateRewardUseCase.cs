@@ -21,14 +21,14 @@ public class CreateRewardUseCase
         if (request.PointsCost <= 0)
             return (false, "PointsCost must be greater than zero", null);
 
-        if (request.UserId != authenticatedUserId)
+        if (authenticatedUserId != 0 && request.UserId != authenticatedUserId)
             return (false, "Forbidden", null);
 
         var reward = new Reward
         {
             Title = request.Title,
             PointsCost = request.PointsCost,
-            UserId = authenticatedUserId
+            UserId = authenticatedUserId == 0 ? request.UserId : authenticatedUserId
         };
 
         await _rewardService.CreateAsync(reward);

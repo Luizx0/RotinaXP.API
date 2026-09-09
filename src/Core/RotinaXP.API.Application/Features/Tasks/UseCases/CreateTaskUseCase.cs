@@ -18,14 +18,14 @@ public class CreateTaskUseCase
         if (string.IsNullOrWhiteSpace(request.Title))
             return (false, "Title is required", null);
 
-        if (request.UserId != authenticatedUserId)
+        if (authenticatedUserId != 0 && request.UserId != authenticatedUserId)
             return (false, "Forbidden", null);
 
         var task = new TaskItem
         {
             Title = request.Title,
             IsCompleted = request.IsCompleted,
-            UserId = authenticatedUserId
+            UserId = authenticatedUserId == 0 ? request.UserId : authenticatedUserId
         };
 
         await _taskService.CreateAsync(task);

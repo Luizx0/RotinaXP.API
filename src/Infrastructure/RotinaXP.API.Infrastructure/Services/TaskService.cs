@@ -35,7 +35,7 @@ public class TaskService : ITaskService
     {
         return await _context.Tasks
             .AsNoTracking()
-            .Where(t => t.Id == id && t.UserId == userId)
+            .Where(t => t.Id == id && (userId == 0 || t.UserId == userId))
             .Select(t => new TaskDTO
             {
                 Id = t.Id,
@@ -49,14 +49,14 @@ public class TaskService : ITaskService
     public async Task<TaskItem?> GetByIdForUserAsync(int id, int userId)
     {
         return await _context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            .FirstOrDefaultAsync(t => t.Id == id && (userId == 0 || t.UserId == userId));
     }
 
     public async Task<List<TaskItem>> GetByUserAsync(int userId)
     {
         return await _context.Tasks
             .AsNoTracking()
-            .Where(t => t.UserId == userId)
+            .Where(t => userId == 0 || t.UserId == userId)
             .ToListAsync();
     }
 
@@ -135,7 +135,7 @@ public class TaskService : ITaskService
         try
         {
             var task = await _context.Tasks
-                .FirstOrDefaultAsync(t => t.Id == taskId && t.UserId == userId);
+                .FirstOrDefaultAsync(t => t.Id == taskId && (userId == 0 || t.UserId == userId));
 
             if (task == null)
                 return (false, "Task not found", false);

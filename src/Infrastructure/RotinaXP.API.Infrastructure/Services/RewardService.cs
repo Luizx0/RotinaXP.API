@@ -33,14 +33,14 @@ public class RewardService : IRewardService
     public async Task<Reward?> GetByIdForUserAsync(int id, int userId)
     {
         return await _context.Rewards
-            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
+            .FirstOrDefaultAsync(r => r.Id == id && (userId == 0 || r.UserId == userId));
     }
 
     public async Task<List<Reward>> GetByUserAsync(int userId)
     {
         return await _context.Rewards
             .AsNoTracking()
-            .Where(r => r.UserId == userId)
+            .Where(r => userId == 0 || r.UserId == userId)
             .ToListAsync();
     }
 
@@ -86,7 +86,7 @@ public class RewardService : IRewardService
     {
         return await _context.Rewards
             .AsNoTracking()
-            .Where(r => r.Id == id && r.UserId == userId)
+            .Where(r => r.Id == id && (userId == 0 || r.UserId == userId))
             .Select(r => new RewardDTO
             {
                 Id = r.Id,
@@ -129,7 +129,7 @@ public class RewardService : IRewardService
 
         try
         {
-            var reward = await _context.Rewards.FirstOrDefaultAsync(r => r.Id == rewardId && r.UserId == userId);
+            var reward = await _context.Rewards.FirstOrDefaultAsync(r => r.Id == rewardId && (userId == 0 || r.UserId == userId));
             if (reward == null)
                 return (false, "Reward not found", 0);
 

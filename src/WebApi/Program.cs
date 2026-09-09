@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using RotinaXP.API.Data;
 using RotinaXP.API.Extensions;
 using RotinaXP.API.Options;
+using RotinaXP.API.Models;
+using RotinaXP.API.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +43,16 @@ var rateLimitingOptions = builder.Configuration
     .GetSection(RateLimitingOptions.SectionName)
     .Get<RateLimitingOptions>()
     ?? new RateLimitingOptions();
+
+var superUserOptions = builder.Configuration
+    .GetSection(SuperUserOptions.SectionName)
+    .Get<SuperUserOptions>()
+    ?? new SuperUserOptions();
+
+superUserOptions.Email = Environment.GetEnvironmentVariable("ROTINAXP_SUPERUSER_EMAIL")
+    ?? superUserOptions.Email;
+superUserOptions.Password = Environment.GetEnvironmentVariable("ROTINAXP_SUPERUSER_PASSWORD")
+    ?? superUserOptions.Password;
 
 var otelOptions = builder.Configuration
     .GetSection(OtelOptions.SectionName)
@@ -93,10 +107,43 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 var app = builder.Build();
 
+await SeedSuperUserAsync(app.Services, superUserOptions);
+
 app.UseRotinaXpDevelopmentTools();
 app.UseRotinaXpPipeline();
 app.MapControllers();
 app.MapHealthEndpoints();
+
+static async Task SeedSuperUserAsync(IServiceProvider services, SuperUserOptions options)
+{
+    if (string.IsNullOrWhiteSpace(options.Email) || string.IsNullOrWhiteSpace(options.Password))
+        return;
+
+    if (options.Password.Length < 8)
+        throw new InvalidOperationException("ROTINAXP_SUPERUSER_PASSWORD must have at least 8 characters.");
+
+    using var scope = services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var email = options.Email.Trim().ToLowerInvariant();
+    var user = await context.Users.FirstOrDefaultAsync(candidate => candidate.Email == email);
+
+    if (user == null)
+    {
+        context.Users.Add(new User
+        {
+            Name = "Superuser",
+            Email = email,
+            PasswordHash = passwordHasher.Hash(options.Password)
+        });
+    }
+    else if (!passwordHasher.Verify(options.Password, user.PasswordHash))
+    {
+        user.PasswordHash = passwordHasher.Hash(options.Password);
+    }
+
+    await context.SaveChangesAsync();
+}
 
 app.Run();
 

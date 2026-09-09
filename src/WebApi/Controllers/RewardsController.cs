@@ -44,7 +44,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var response = await _getRewardsPageUseCase.ExecuteAsync(authenticatedUserId.Value, page, pageSize);
+        var response = await _getRewardsPageUseCase.ExecuteAsync(User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value, page, pageSize);
         return Ok(response);
     }
 
@@ -58,7 +58,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var reward = await _getRewardByIdUseCase.ExecuteAsync(id, authenticatedUserId.Value);
+        var reward = await _getRewardByIdUseCase.ExecuteAsync(id, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value);
         if (reward == null)
             return NotFound(new { message = "Reward not found" });
 
@@ -88,7 +88,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var result = await _createRewardUseCase.ExecuteAsync(request, authenticatedUserId.Value);
+        var result = await _createRewardUseCase.ExecuteAsync(request, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value);
         if (!result.Success)
         {
             if (result.Message == "Forbidden")
@@ -114,7 +114,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var result = await _updateRewardUseCase.ExecuteAsync(id, authenticatedUserId.Value, request);
+        var result = await _updateRewardUseCase.ExecuteAsync(id, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value, request);
         if (!result.Success)
         {
             if (result.Message == "Reward not found")
@@ -136,7 +136,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var result = await _deleteRewardUseCase.ExecuteAsync(id, authenticatedUserId.Value);
+        var result = await _deleteRewardUseCase.ExecuteAsync(id, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value);
         if (!result.Success)
             return NotFound(new { message = "Reward not found" });
 
@@ -154,7 +154,7 @@ public class RewardsController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var result = await _redeemRewardUseCase.ExecuteAsync(id, authenticatedUserId.Value);
+        var result = await _redeemRewardUseCase.ExecuteAsync(id, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value);
         if (!result.Success)
         {
             if (result.Message is "Reward not found" or "User not found")

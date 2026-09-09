@@ -31,7 +31,7 @@ public class DailyProgressController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var response = await _getDailyProgressPageUseCase.ExecuteAsync(authenticatedUserId.Value, page, pageSize);
+        var response = await _getDailyProgressPageUseCase.ExecuteAsync(User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value, page, pageSize);
         return Ok(response);
     }
 
@@ -45,7 +45,7 @@ public class DailyProgressController : ControllerBase
         if (!authenticatedUserId.HasValue)
             return Unauthorized();
 
-        var progress = await _getDailyProgressByIdUseCase.ExecuteAsync(id, authenticatedUserId.Value);
+        var progress = await _getDailyProgressByIdUseCase.ExecuteAsync(id, User.IsInRole("SUPERUSER") ? 0 : authenticatedUserId.Value);
         if (progress == null)
             return NotFound(new { message = "Daily progress not found" });
 

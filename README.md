@@ -33,9 +33,21 @@ dotnet run --project src/WebApi/RotinaXP.API.csproj
 - `GET /admin/ibge/estados`
 - `GET /admin/ibge/indicadores?indicadorId=<id>&ano=2021&uf=SP`
 
+## Superusuário
+
+Configure as variáveis de ambiente antes de iniciar a API. A senha é gravada apenas como hash BCrypt no banco:
+
+```powershell
+$env:ROTINAXP_SUPERUSER_EMAIL = "admin@exemplo.local"
+$env:ROTINAXP_SUPERUSER_PASSWORD = "uma-senha-forte"
+dotnet run --project src/WebApi/RotinaXP.API.csproj
+```
+
+O usuário é criado ou atualizado automaticamente na inicialização. Para trocar a senha, altere `ROTINAXP_SUPERUSER_PASSWORD` e reinicie a API. Faça login normalmente em `POST /api/auth/login`; o JWT receberá as roles `SUPERUSER` e `Admin`.
+
 Observações:
 
-- Para desenvolvimento/integração de teste, o header `X-User-Role: Admin` é aceito pela policy `RequireAdmin`.
+- Não existe senha padrão no código ou nos arquivos de configuração.
 
 ---
 
