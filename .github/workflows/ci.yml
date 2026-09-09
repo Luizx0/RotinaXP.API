@@ -1,49 +1,81 @@
-name: CI
+name: Build and Test
 
 on:
   push:
-    branches: [main, entrega-intermediaria]
+    branches: ['**']
   pull_request:
-    branches: [main]
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  SOLUTION_FILE: 'RotinaXP.API.sln'
+  API_PROJECT: 'src/WebApi/RotinaXP.API.csproj'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore RotinaXP.API.sln
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
 
       - name: Build
-        run: dotnet build RotinaXP.API.sln --configuration Release --no-restore
+        run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test RotinaXP.API.sln --no-build --verbosity normal
+        run: >-
+          dotnet test ${{ env.SOLUTION_FILE }}
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --collect:"XPlat Code Coverage"
+          --results-directory ./TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./TestResults
+          if-no-files-found: ignore
 
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && contains(github.ref, 'entrega-intermediaria')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build
-        run: dotnet publish src/WebApi/RotinaXP.API.csproj -c Release -o ./publish
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
 
-      - name: Upload artifact
+      - name: Publish API
+        run: >-
+          dotnet publish ${{ env.API_PROJECT }}
+          --configuration Release
+          --no-restore
+          --output ./publish
+
+      - name: Upload API artifact
         uses: actions/upload-artifact@v4
         with:
           name: rotinaxp-api-publish
